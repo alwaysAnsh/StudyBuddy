@@ -20,6 +20,12 @@ const Buddies = () => {
     (state) => state.buddies
   );
   const { user } = useSelector((state) => state.auth);
+  // const [buddyRequestSent, setBuddyRequestSent ] = useState(false)
+
+  // console.log("searchResults: ", searchResults);
+  // console.log("user: ", user);
+
+  
 
   const [activeTab, setActiveTab] = useState('buddies');
   const [searchQuery, setSearchQuery] = useState('');
@@ -46,6 +52,7 @@ const Buddies = () => {
     try {
       await dispatch(sendBuddyRequest(userId)).unwrap();
       alert('Buddy request sent!');
+      // setBuddyRequestSent(true)
       dispatch(searchUsers(searchQuery)); // Refresh search results
       dispatch(getSentRequests());
     } catch (error) {
@@ -97,6 +104,7 @@ const Buddies = () => {
   const clearSearch = () => {
     setSearchQuery('');
     dispatch(clearSearchResults());
+    // setBuddyRequestSent(false)
   };
 
   const getAvatarUrl = (avatarNum) => {
@@ -287,7 +295,7 @@ const Buddies = () => {
                     </div>
                     {user.isBuddy ? (
                       <span className="already-buddy-badge">✓ Buddy</span>
-                    ) : (
+                    ) :  (
                       <button
                         className="add-buddy-btn"
                         onClick={() => handleSendRequest(user._id)}

@@ -40,6 +40,34 @@ mongoose
 // ============================================
 
 // Buddy Request Schema
+// const buddyRequestSchema = new mongoose.Schema({
+//   sender: { 
+//     type: mongoose.Schema.Types.ObjectId, 
+//     ref: 'User', 
+//     required: true 
+//   },
+//   receiver: { 
+//     type: mongoose.Schema.Types.ObjectId, 
+//     ref: 'User', 
+//     required: true 
+//   },
+//   status: { 
+//     type: String, 
+//     enum: ['pending', 'accepted', 'rejected'],
+//     default: 'pending'
+//   },
+//   createdAt: { 
+//     type: Date, 
+//     default: Date.now 
+//   }
+// });
+
+// // Compound index to prevent duplicate requests
+// buddyRequestSchema.index({ sender: 1, receiver: 1 }, { unique: true });
+
+// const BuddyRequest = mongoose.model('BuddyRequest', buddyRequestSchema);
+
+
 const buddyRequestSchema = new mongoose.Schema({
   sender: { 
     type: mongoose.Schema.Types.ObjectId, 
@@ -62,10 +90,17 @@ const buddyRequestSchema = new mongoose.Schema({
   }
 });
 
-// Compound index to prevent duplicate requests
-buddyRequestSchema.index({ sender: 1, receiver: 1 }, { unique: true });
+// ✅ Only ONE pending request allowed between sender & receiver
+buddyRequestSchema.index(
+  { sender: 1, receiver: 1, status: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { status: 'pending' }
+  }
+);
 
 const BuddyRequest = mongoose.model('BuddyRequest', buddyRequestSchema);
+
 
 // User Schema - UPDATED with Level Title
 const userSchema = new mongoose.Schema({
@@ -557,23 +592,80 @@ app.get('/api/users/search/:query', authenticateToken, async (req, res) => {
 });
 
 // Send buddy request
+// app.post('/api/buddies/request/:userId', authenticateToken, async (req, res) => {
+//   try {
+//     const receiverId = req.params.userId;
+//     console.log("receiverId: ", receiverId);  //2f
+    
+//     const senderId = req.user.id;
+
+//     console.log("senderId: ", senderId);   //2bf
+
+//     if (senderId === receiverId) {
+//       return res.status(400).json({ message: 'Cannot send buddy request to yourself' });
+//     }
+
+//     // Check if already buddies
+//     const sender = await User.findById(senderId);
+//     console.log("3: ", sender)
+//     if (sender.buddies.includes(receiverId)) {
+//       return res.status(400).json({ message: 'Already buddies' });
+//     }
+
+//     // Check if request already exists
+//     const existingRequest = await BuddyRequest.findOne({
+//       $or: [
+//         { sender: senderId, receiver: receiverId },
+//         { sender: receiverId, receiver: senderId }
+//       ],
+//       status: 'pending'
+//     });
+// // console.log("existingRequest: ", existingRequest);
+//     if (existingRequest) {
+      
+//       return res.status(400).json({ message: 'Buddy request already exists' });
+//   }
+
+//     const buddyRequest = new BuddyRequest({
+//       sender: senderId,
+//       receiver: receiverId
+//     });
+
+//     await buddyRequest.save();
+//     const populatedRequest = await BuddyRequest.findById(buddyRequest._id)
+//       .populate('sender', 'username name avatar')
+//       .populate('receiver', 'username name avatar');
+
+//     console.log('✅ Buddy request sent');
+//     res.status(201).json(populatedRequest);
+//   } catch (error) {
+//     console.error('❌ Send buddy request error:', error);
+//     if (error.code === 11000) {
+//       console.log("error here")
+//       return res.status(400).json({ message: 'Buddy request already exists' });
+//     }
+//     res.status(500).json({ message: 'Server error' });
+//   }
+// });
+
 app.post('/api/buddies/request/:userId', authenticateToken, async (req, res) => {
   try {
     const receiverId = req.params.userId;
     const senderId = req.user.id;
 
+    // 1. Prevent self request
     if (senderId === receiverId) {
       return res.status(400).json({ message: 'Cannot send buddy request to yourself' });
     }
 
-    // Check if already buddies
+    // 2. Check if already buddies
     const sender = await User.findById(senderId);
-    if (sender.buddies.includes(receiverId)) {
+    if (sender.buddies.some(id => id.toString() === receiverId)) {
       return res.status(400).json({ message: 'Already buddies' });
     }
 
-    // Check if request already exists
-    const existingRequest = await BuddyRequest.findOne({
+    // 3. Check pending request in either direction
+    const existingPendingRequest = await BuddyRequest.findOne({
       $or: [
         { sender: senderId, receiver: receiverId },
         { sender: receiverId, receiver: senderId }
@@ -581,30 +673,37 @@ app.post('/api/buddies/request/:userId', authenticateToken, async (req, res) => 
       status: 'pending'
     });
 
-    if (existingRequest) {
+    if (existingPendingRequest) {
       return res.status(400).json({ message: 'Buddy request already exists' });
     }
 
+    // 4. Create new request
     const buddyRequest = new BuddyRequest({
       sender: senderId,
-      receiver: receiverId
+      receiver: receiverId,
+      status: 'pending'
     });
 
     await buddyRequest.save();
+
     const populatedRequest = await BuddyRequest.findById(buddyRequest._id)
       .populate('sender', 'username name avatar')
       .populate('receiver', 'username name avatar');
 
-    console.log('✅ Buddy request sent');
-    res.status(201).json(populatedRequest);
+    return res.status(201).json(populatedRequest);
+
   } catch (error) {
     console.error('❌ Send buddy request error:', error);
+
+    // Duplicate pending request safety (race condition)
     if (error.code === 11000) {
       return res.status(400).json({ message: 'Buddy request already exists' });
     }
-    res.status(500).json({ message: 'Server error' });
+
+    return res.status(500).json({ message: 'Server error' });
   }
 });
+
 
 // Get pending buddy requests (received)
 app.get('/api/buddies/requests/received', authenticateToken, async (req, res) => {
@@ -688,8 +787,22 @@ app.patch('/api/buddies/requests/:requestId/reject', authenticateToken, async (r
       return res.status(403).json({ message: 'Not authorized' });
     }
 
-    request.status = 'rejected';
-    await request.save();
+    // request.status = 'rejected';
+    // await request.save();
+
+    const updatedRequest = await BuddyRequest.findOneAndUpdate(
+  {
+    _id: req.params.requestId,
+    receiver: req.user.id,
+    status: 'pending'
+  },
+  { status: 'rejected' },
+  { new: true }
+);
+
+if (!updatedRequest) {
+  return res.status(400).json({ message: 'Request not found or already handled' });
+}
 
     console.log('✅ Buddy request rejected');
     res.json({ message: 'Buddy request rejected' });
@@ -697,6 +810,28 @@ app.patch('/api/buddies/requests/:requestId/reject', authenticateToken, async (r
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+// app.patch('/api/buddies/requests/:requestId/reject', authenticateToken, async (req, res) => {
+//   try {
+//     const request = await BuddyRequest.findById(req.params.requestId);
+
+//     if (!request) {
+//       return res.status(404).json({ message: 'Request not found' });
+//     }
+
+//     if (request.receiver.toString() !== req.user.id) {
+//       return res.status(403).json({ message: 'Not authorized' });
+//     }
+
+//     await BuddyRequest.findByIdAndDelete(req.params.requestId);
+
+
+//     console.log('✅ Buddy request rejected');
+//     res.json({ message: 'Buddy request rejected' });
+//   } catch (error) {
+//     res.status(500).json({ message: 'Server error' });
+//   }
+// });
 
 // Cancel buddy request (sender cancels)
 app.delete('/api/buddies/requests/:requestId', authenticateToken, async (req, res) => {
