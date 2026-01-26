@@ -1,0 +1,24 @@
+.create-note-modal {
+  max-width: 650px;
+}
+
+.create-note-form {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-info {
+  background: #edf2f7;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border-left: 4px solid #48bb78;
+}
+
+.form-info p {
+  margin: 0;
+  color: #2d3748;
+  font-size: 14px;
+  font-weight: 500;
+}

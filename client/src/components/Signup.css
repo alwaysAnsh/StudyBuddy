@@ -1,0 +1,278 @@
+/* Page background */
+.signup-page {
+  min-height: 100vh;
+  background-image: url('/images/signup-image.png'); /* <-- replace later */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+}
+
+/* Dark overlay for readability */
+.signup-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+/* Center wrapper */
+.signup-wrapper {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+/* Card */
+.signup-card {
+  background: #aaabab; /*505659*/
+  width: 100%;
+  
+  max-width:920px;
+  border-radius: 20px;
+  padding: 36px;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.35);
+  animation: fadeUp 0.4s ease;
+}
+
+/* Header */
+.signup-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.signup-header h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1a202c;
+}
+
+.signup-header p {
+  font-size: 14px;
+  color: #718096;
+}
+
+/* Form */
+.signup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+
+
+.form-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e0;
+  font-size: 14px;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+/* Password row */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+
+/* Avatar grid */
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.avatar-option {
+  border: 2px solid transparent;
+  border-radius: 12px;
+  padding: 0;
+  cursor: pointer;
+  background: #f7fafc;
+  overflow: hidden;
+}
+
+.avatar-option img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-option.selected {
+  border-color: #667eea;
+}
+
+/* Username status */
+.input-with-status {
+  position: relative;
+}
+
+.username-status {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.available { color: #38a169; }
+.taken { color: #e53e3e; }
+.checking { color: #718096; }
+
+/* Errors */
+.error-text {
+  font-size: 12px;
+  color: #e53e3e;
+  margin-top: 4px;
+}
+
+input.error {
+  border-color: #e53e3e;
+}
+
+/* Button */
+.signup-btn {
+  margin-top: 10px;
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  background: #667eea;
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.signup-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Footer */
+.signup-footer {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 14px;
+}
+
+.signup-footer a {
+  color: #667eea;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.signup-card {
+  color-scheme: light;
+}
+
+/* Force consistent input styling across light/dark system themes */
+.signup-card input,
+.signup-card textarea,
+.signup-card select {
+  background-color: #ffffff;
+  color: #1a202c;          /* dark readable text */
+  caret-color: #1a202c;   /* cursor color */
+}
+
+/* Placeholder text */
+.signup-card input::placeholder {
+  color: #a0aec0;
+}
+
+/* Autofill fix (Chrome) */
+.signup-card input:-webkit-autofill {
+  -webkit-text-fill-color: #1a202c;
+  -webkit-box-shadow: 0 0 0px 1000px #ffffff inset;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Two column layout */
+.signup-form.two-column {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 32px;
+  align-items: start;
+}
+
+/* Left side */
+.form-left {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Right side (avatars) */
+.form-right {
+  background: #f7fafc;
+  padding: 20px;
+  border-radius: 16px;
+  height: fit-content;
+}
+
+.avatar-title {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #2d3748;
+}
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+
+/* Animations */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .signup-card {
+    padding: 28px 22px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 900px) {
+  .signup-form.two-column {
+    grid-template-columns: 1fr;
+  }
+
+  .form-right {
+    order: -1; /* avatars go on top */
+  }
+
+  .avatar-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+

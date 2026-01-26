@@ -1,0 +1,197 @@
+/* ===== Main Container ===== */
+.login-container {
+  min-height: 100vh;
+  display: flex;
+}
+
+/* ===== LEFT SIDE ===== */
+.login-left {
+  flex: 1;
+  background-image: url('/images/login-bg.png'); /* replace later */
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.login-left .overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 60px;
+  color: #bad76a;
+}
+
+.login-left h1 {
+  font-size: 40px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.login-left p {
+  font-size: 16px;
+  color: #e5e7eb;
+  max-width: 400px;
+}
+
+/* ===== RIGHT SIDE ===== */
+.login-right {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #cbcdce;
+  /* background-image: url('/images/lines.png'); */
+  padding: 40px 20px;
+}
+
+/* ===== Card ===== */
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  background: #ffffff;
+  padding: 36px 32px;
+  border-radius: 16px;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.25);
+}
+
+/* ===== Header ===== */
+.login-header {
+  text-align: center;
+  margin-bottom: 26px;
+}
+
+.login-header h2 {
+  font-size: 26px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.login-header p {
+  font-size: 14px;
+  color: #64748b;
+}
+
+/* ===== Form ===== */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+}
+
+/* ===== Inputs ===== */
+.form-group input {
+  padding: 12px 14px;
+  font-size: 14px;
+  background-color: #f1f5f9;
+  color: #0f172a;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+}
+
+.form-group input::placeholder {
+  color: #94a3b8;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+}
+
+/* ===== Password Toggle ===== */
+.password-wrapper {
+  position: relative;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+/* ===== Button ===== */
+.login-btn {
+  margin-top: 8px;
+  padding: 14px;
+  background-color: #6366f1;
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.login-btn:hover:not(:disabled) {
+  box-shadow: 0 12px 25px rgba(99, 102, 241, 0.4);
+  transform: translateY(-1px);
+}
+
+.login-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ===== Error ===== */
+.error-message {
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 13px;
+  text-align: center;
+}
+
+/* ===== Footer ===== */
+.login-info {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 14px;
+  color: #475569;
+}
+
+.login-info a {
+  color: #6366f1;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* ===== Mobile Responsive ===== */
+@media (max-width: 768px) {
+  .login-container {
+    flex-direction: column;
+  }
+
+  .login-left {
+    height: 200px;
+  }
+
+  .login-left h1 {
+    font-size: 28px;
+  }
+
+  .login-left p {
+    font-size: 14px;
+  }
+}

@@ -1,0 +1,206 @@
+.activity-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.2s;
+  border-left: 4px solid #667eea;
+}
+
+.activity-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.activity-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.activity-header-left {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.activity-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 20px;
+}
+
+.activity-user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.activity-user-name {
+  font-weight: 600;
+  color: #2d3748;
+  font-size: 16px;
+}
+
+.activity-timestamp {
+  color: #a0aec0;
+  font-size: 13px;
+}
+
+.activity-header-right {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.activity-category-badge {
+  background: #edf2f7;
+  color: #4a5568;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.activity-delete-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.activity-delete-btn:hover {
+  background: #fed7d7;
+}
+
+.activity-content {
+  margin-bottom: 16px;
+}
+
+.activity-title {
+  font-size: 20px;
+  color: #2d3748;
+  margin: 0 0 8px 0;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.activity-description {
+  color: #4a5568;
+  line-height: 1.6;
+  margin: 0 0 12px 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.activity-link {
+  display: inline-block;
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 14px;
+  transition: color 0.2s;
+  padding: 6px 12px;
+  background: #f7fafc;
+  border-radius: 6px;
+}
+
+.activity-link:hover {
+  color: #764ba2;
+  background: #edf2f7;
+}
+
+.activity-footer {
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.activity-completion {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.completion-btn {
+  padding: 8px 16px;
+  background: white;
+  color: #667eea;
+  border: 2px solid #667eea;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
+  align-self: flex-start;
+}
+
+.completion-btn:hover {
+  background: #f7fafc;
+  transform: translateY(-1px);
+}
+
+.completion-btn.completed {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+}
+
+.completion-btn.completed:hover {
+  background: #5568d3;
+}
+
+.completion-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.completion-count {
+  color: #4a5568;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.completed-users {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.completed-user-badge {
+  background: #edf2f7;
+  color: #4a5568;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+@media (max-width: 640px) {
+  .activity-card {
+    padding: 16px;
+  }
+
+  .activity-card-header {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .activity-header-right {
+    align-self: flex-end;
+  }
+
+  .completion-btn {
+    width: 100%;
+  }
+}
