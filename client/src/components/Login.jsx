@@ -81,7 +81,7 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { login, clearError } from '../redux/slices/authSlice';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './Login.css';
 
 const Login = () => {
@@ -116,7 +116,7 @@ const Login = () => {
       {/* LEFT SIDE (Brand / Image) */}
       <div className="login-left">
         <div className="overlay">
-          <h1>Task Assignment</h1>
+          <h1>StuddyBuddy</h1>
           <p>Practice, assign & grow together</p>
         </div>
       </div>
@@ -174,7 +174,15 @@ const Login = () => {
             <p>
               Don’t have an account? <a href="/signup">Sign up here</a>
             </p>
+            <p>
+              <Link to="/forgot-password">Forgot Password?</Link>
+            </p>
+            <p>
+              <Link to="/">Back to Home</Link>
+            </p>
           </div>
+          
+
         </div>
       </div>
     </div>

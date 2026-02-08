@@ -35,7 +35,7 @@ const Layout = ({ children }) => {
             <div className="logo-placeholder">
               <span className="logo-text">LA</span>
             </div>
-            {isSidebarOpen && <span className="app-name">Learning App</span>}
+            {isSidebarOpen && <span className="app-name">StuddyBuddy</span>}
           </div>
         </div>
 
@@ -71,7 +71,7 @@ const Layout = ({ children }) => {
       <footer className={`app-footer ${isSidebarOpen ? '' : 'expanded'}`}>
         <div className="footer-content">
           <div className="footer-section">
-            <h3 className="footer-title">Learning App</h3>
+            <h3 className="footer-title">StuddyBuddy</h3>
             <p className="footer-tagline">
               Master your learning journey together
             </p>
@@ -108,7 +108,7 @@ const Layout = ({ children }) => {
 
         <div className="footer-bottom">
           <p className="copyright">
-            © {new Date().getFullYear()} Learning App. All rights reserved.
+            © {new Date().getFullYear()} StuddyBuddy. All rights reserved.
           </p>
           <div className="footer-legal">
             <a href="#">Privacy Policy</a>

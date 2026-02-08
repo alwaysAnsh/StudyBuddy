@@ -4,6 +4,7 @@ import axiosInstance from '../../config/axios';
 // Load user from localStorage
 const user = JSON.parse(localStorage.getItem('user'));
 const token = localStorage.getItem('token');
+const API_URL = 'http://localhost:5050/api';
 
 // Check username availability
 export const checkUsername = createAsyncThunk(
@@ -55,6 +56,38 @@ export const login = createAsyncThunk(
   }
 );
 
+// Update user profile (name and avatar)
+export const updateUserProfile = createAsyncThunk(
+  'auth/updateProfile',
+  async (profileData, { rejectWithValue }) => {
+    try {
+      // use axiosInstance so baseURL / headers are applied
+      const response = await axiosInstance.patch('/users/update-profile', profileData);
+      return response.data.user;
+    } catch (error) {
+      console.error('updateUserProfile error:', error);
+      const message = error.response?.data?.message || error.message || String(error);
+      return rejectWithValue(message);
+    }
+  }
+);
+
+// Change password (when logged in)
+export const changePassword = createAsyncThunk(
+  'auth/changePassword',
+  async (passwordData, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post(
+        '/auth/change-password',
+        passwordData
+      );
+      return response.data.message;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to change password');
+    }
+  }
+);
+
 // Get current user
 export const getCurrentUser = createAsyncThunk(
   'auth/getCurrentUser',
@@ -69,17 +102,17 @@ export const getCurrentUser = createAsyncThunk(
 );
 
 // Update user profile
-export const updateProfile = createAsyncThunk(
-  'auth/updateProfile',
-  async (profileData, { rejectWithValue }) => {
-    try {
-      const response = await axiosInstance.patch('/users/profile', profileData);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to update profile');
-    }
-  }
-);
+// export const updateProfile = createAsyncThunk(
+//   'auth/updateProfile',
+//   async (profileData, { rejectWithValue }) => {
+//     try {
+//       const response = await axiosInstance.patch('/users/profile', profileData);
+//       return response.data;
+//     } catch (error) {
+//       return rejectWithValue(error.response?.data?.message || 'Failed to update profile');
+//     }
+//   }
+// );
 
 // Add custom category
 export const addCustomCategory = createAsyncThunk(
@@ -189,10 +222,10 @@ const authSlice = createSlice({
         state.user = action.payload;
       })
       // Update profile
-      .addCase(updateProfile.fulfilled, (state, action) => {
-        state.user = action.payload;
-        localStorage.setItem('user', JSON.stringify(action.payload));
-      })
+      // .addCase(updateProfile.fulfilled, (state, action) => {
+      //   state.user = action.payload;
+      //   localStorage.setItem('user', JSON.stringify(action.payload));
+      // })
       // Add custom category
       .addCase(addCustomCategory.fulfilled, (state, action) => {
         if (state.user) {
@@ -219,7 +252,33 @@ const authSlice = createSlice({
   .addCase(getAllCategories.rejected, (state, action) => {
     state.isLoading = false;
     state.error = action.payload;
-  });
+  })
+  // Update Profile
+      .addCase(updateUserProfile.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(updateUserProfile.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload;
+      })
+      .addCase(updateUserProfile.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      })
+      
+      // Change Password
+      .addCase(changePassword.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(changePassword.fulfilled, (state) => {
+        state.isLoading = false;
+      })
+      .addCase(changePassword.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      });
   },
 });
 

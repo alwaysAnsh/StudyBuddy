@@ -1,0 +1,294 @@
+/* ============================= */
+/* Modal Overlay */
+/* ============================= */
+
+.modal-overlay-pro {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+/* ============================= */
+/* Modal Container */
+/* ============================= */
+
+.modal-content-pro {
+  background: #ffffff;
+  width: 90%;
+  max-width: 700px;
+  max-height: 90vh;
+  border-radius: 14px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: modalFadeIn 0.25s ease-out;
+}
+
+/* ============================= */
+/* Header */
+/* ============================= */
+
+.modal-header-pro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-header-pro h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* Close button */
+.modal-close-pro {
+  font-size: 26px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #6b7280;
+  line-height: 1;
+}
+
+.modal-close-pro:hover {
+  color: #111827;
+}
+
+/* ============================= */
+/* Tabs */
+/* ============================= */
+
+.settings-tabs {
+  display: flex;
+  gap: 10px;
+  padding: 12px 22px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.settings-tab {
+  padding: 8px 14px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.settings-tab.active {
+  background: #4f46e5;
+  color: #ffffff;
+}
+
+/* ============================= */
+/* Body / Scroll Area */
+/* ============================= */
+
+.settings-form {
+  padding: 20px 22px;
+  overflow-y: auto;
+}
+
+/* ============================= */
+/* Sections */
+/* ============================= */
+
+.form-section {
+  margin-bottom: 28px;
+}
+
+.form-section h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #111827;
+}
+
+/* ============================= */
+/* Avatar Grid */
+/* ============================= */
+
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+  gap: 12px;
+}
+
+.avatar-option {
+  position: relative;
+  cursor: pointer;
+  border-radius: 50%;
+  padding: 4px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.avatar-option img {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+}
+
+.avatar-option:hover {
+  transform: scale(1.05);
+}
+
+.avatar-option.selected {
+  box-shadow: 0 0 0 3px #4f46e5;
+}
+
+.selected-indicator {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  background: #4f46e5;
+  color: #ffffff;
+  font-size: 12px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ============================= */
+/* Inputs */
+/* ============================= */
+
+.form-group-pro {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 14px;
+}
+
+.form-group-pro label {
+  font-size: 13px;
+  margin-bottom: 4px;
+  color: #374151;
+}
+
+.form-group-pro input {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+}
+
+.form-group-pro input:focus {
+  outline: none;
+  border-color: #4f46e5;
+}
+
+.disabled-input {
+  background: #f3f4f6;
+  cursor: not-allowed;
+}
+
+/* ============================= */
+/* Buttons */
+/* ============================= */
+
+.form-actions-pro {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.cancel-btn-pro {
+  padding: 10px 16px;
+  background: #e5e7eb;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.submit-btn-pro {
+  padding: 10px 16px;
+  background: #4f46e5;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.submit-btn-pro:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ============================= */
+/* Animations */
+/* ============================= */
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+/* ============================= */
+/* Mobile Responsiveness */
+/* ============================= */
+
+@media (max-width: 640px) {
+  .modal-overlay-pro {
+    align-items: flex-end; /* push modal to bottom */
+  }
+
+  .modal-content-pro {
+    width: 100%;
+    max-width: 100%;
+    max-height: 92vh;
+    border-radius: 16px 16px 0 0;
+    animation: slideUpMobile 0.3s ease-out;
+  }
+
+  .modal-header-pro {
+    padding: 16px;
+  }
+
+  .settings-tabs {
+    padding: 10px 16px;
+    overflow-x: auto;
+  }
+
+  .settings-form {
+    padding: 16px;
+  }
+
+  .form-actions-pro {
+    position: sticky;
+    bottom: 0;
+    background: #ffffff;
+    padding-top: 12px;
+  }
+
+  .avatar-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+
+  .avatar-option img {
+    width: 56px;
+    height: 56px;
+  }
+}
+@keyframes slideUpMobile {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}

@@ -11,6 +11,7 @@ import ActivityFeed from './ActivityFeed';
 import UserSearch from './UserSearch';
 import './Dashboard.css';
 import axiosInstance from '../config/axios';
+import ProfileSettings from './ProfileSettings';
 
 const Dashboard = () => {
   const dispatch = useDispatch();
@@ -20,6 +21,7 @@ const Dashboard = () => {
   const { buddies, receivedRequests } = useSelector((state) => state.buddies);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [activeTab, setActiveTab] = useState('my-tasks');
   const [filterCategory, setFilterCategory] = useState('all');
   const [showAllCategories, setShowAllCategories] = useState(false);
@@ -166,7 +168,7 @@ const Dashboard = () => {
       <header className="professional-header">
         <div className="header-left">
           <Link to="/" className="logo-pro">
-            <span className="logo-text-pro">KARYA</span>
+            <span className="logo-text-pro">StuddyBuddy</span>
           </Link>
         </div>
 
@@ -204,6 +206,9 @@ const Dashboard = () => {
                 <div className="dropdown-item-pro logout" onClick={handleLogout}>
                   Logout
                 </div>
+                <div className="dropdown-item-pro" onClick={() => setShowSettings(true)}>
+                  Settings
+              </div>
               </div>
             )}
           </div>
@@ -429,6 +434,8 @@ const Dashboard = () => {
       {showSearchModal && (
         <UserSearch onClose={() => setShowSearchModal(false)} />
       )}
+
+      {showSettings && <ProfileSettings onClose={() => setShowSettings(false)} />}
     </div>
   );
 };

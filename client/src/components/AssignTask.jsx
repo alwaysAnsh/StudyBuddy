@@ -9,7 +9,7 @@ const AssignTask = ({ onClose }) => {
   const dispatch = useDispatch();
   const { buddies } = useSelector((state) => state.buddies);
   const { user } = useSelector((state) => state.auth);
-  console.log("buddies",buddies)
+  // console.log("buddies",buddies)
   
   const [formData, setFormData] = useState({
     title: '',

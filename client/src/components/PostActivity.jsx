@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { createActivity, getAllActivities } from '../redux/slices/activitySlice';
 import './PostActivity.css';
+import { addCustomCategory, deleteCustomCategory } from '../redux/slices/authSlice';
 
 const PostActivity = ({ onClose }) => {
   const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.auth);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -14,8 +16,13 @@ const PostActivity = ({ onClose }) => {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showAddCategory, setShowAddCategory] = useState(false);
+  const [newCategory, setNewCategory] = useState('');
+  const [managingCategories, setManagingCategories] = useState(false);
 
-  const categories = ['General', 'DSA', 'System Design', 'Web Dev', 'React', 'JavaScript', 'Other'];
+  const defaultCategories = ['DSA', 'System Design', 'Web Dev', 'React', 'JavaScript', 'Other'];
+  const customCategories = user?.customCategories || [];
+  const allCategories = [...defaultCategories, ...customCategories];
 
   const handleChange = (e) => {
     setFormData({
@@ -23,6 +30,36 @@ const PostActivity = ({ onClose }) => {
       [e.target.name]: e.target.value
     });
   };
+
+  const handleAddCategory = async () => {
+      if (!newCategory.trim()) {
+        alert('Please enter a category name');
+        return;
+      }
+  
+      try {
+        await dispatch(addCustomCategory(newCategory.trim())).unwrap();
+        setNewCategory('');
+        setShowAddCategory(false);
+        alert('Category added successfully!');
+      } catch (error) {
+        alert(error || 'Failed to add category');
+      }
+    };
+  
+    const handleDeleteCategory = async (category) => {
+      if (window.confirm(`Delete category "${category}"?`)) {
+        try {
+          await dispatch(deleteCustomCategory(category)).unwrap();
+          if (formData.category === category) {
+            setFormData({ ...formData, category: 'DSA' });
+          }
+          alert('Category deleted successfully!');
+        } catch (error) {
+          alert(error || 'Failed to delete category');
+        }
+      }
+    };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -67,7 +104,7 @@ const PostActivity = ({ onClose }) => {
             />
           </div>
 
-          <div className="form-group">
+          {/* <div className="form-group">
             <label htmlFor="category">Category *</label>
             <select
               id="category"
@@ -80,6 +117,76 @@ const PostActivity = ({ onClose }) => {
                 <option key={cat} value={cat}>{cat}</option>
               ))}
             </select>
+          </div> */}
+
+          <div className="form-group">
+            <label htmlFor="category">Category *</label>
+            <div className="category-controls">
+              <select
+                id="category"
+                name="category"
+                value={formData.category}
+                onChange={handleChange}
+                required
+              >
+                {allCategories.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+              <button 
+                type="button" 
+                className="manage-categories-btn"
+                onClick={() => setManagingCategories(!managingCategories)}
+              >
+                ⚙️ Manage
+              </button>
+            </div>
+
+            {managingCategories && (
+              <div className="category-manager">
+                <h4>Your Custom Categories</h4>
+                {customCategories.length === 0 ? (
+                  <p className="no-categories">No custom categories yet</p>
+                ) : (
+                  <div className="custom-category-list">
+                    {customCategories.map(cat => (
+                      <div key={cat} className="custom-category-item">
+                        <span>{cat}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteCategory(cat)}
+                          className="delete-category-btn"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {!showAddCategory ? (
+                  <button
+                    type="button"
+                    className="add-category-toggle-btn"
+                    onClick={() => setShowAddCategory(true)}
+                  >
+                    + Add New Category
+                  </button>
+                ) : (
+                  <div className="add-category-form">
+                    <input
+                      type="text"
+                      value={newCategory}
+                      onChange={(e) => setNewCategory(e.target.value)}
+                      placeholder="Category name"
+                      maxLength="30"
+                    />
+                    <button type="button" onClick={handleAddCategory}>Add</button>
+                    <button type="button" onClick={() => { setShowAddCategory(false); setNewCategory(''); }}>Cancel</button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="form-group">

@@ -130,11 +130,19 @@ const userSchema = new mongoose.Schema({
     type: Number, 
     default: 1, 
     min: 1, 
-    max: 10 
+    max: 20 
   },
   bio: { 
     type: String, 
     default: '' 
+  },
+  securityQuestion: {
+    type: String,
+    required: true
+  },
+  securityAnswer: {
+    type: String,
+    required: true
   },
   level: { 
     type: Number, 
@@ -366,35 +374,39 @@ const authenticateToken = (req, res, next) => {
 // ============================================
 // INITIALIZE USERS
 // ============================================
-const initializeUsers = async () => {
-  try {
-    const count = await User.countDocuments();
-    if (count === 0) {
-      const hashedPassword1 = await bcrypt.hash('password123', 10);
-      const hashedPassword2 = await bcrypt.hash('password123', 10);
+// const initializeUsers = async () => {
+//   try {
+//     const count = await User.countDocuments();
+//     if (count === 0) {
+//       const hashedPassword1 = await bcrypt.hash('example@12', 10);
+//       const hashedPassword2 = await bcrypt.hash('example@12', 10);
 
-      await User.create([
-        {
-          username: 'user1',
-          email: 'user1@example.com',
-          password: hashedPassword1,
-          name: 'User One'
-        },
-        {
-          username: 'user2',
-          email: 'user2@example.com',
-          password: hashedPassword2,
-          name: 'User Two'
-        }
-      ]);
-      console.log('✅ Users initialized: user1 and user2 with password: password123');
-    }
-  } catch (error) {
-    console.log('❌ Error initializing users:', error);
-  }
-};
+//       await User.create([
+//         {
+//           username: 'Jaggu',
+//           email: 'user1@example.com',
+//           password: hashedPassword1,
+//           name: 'Tara',
+//           securityQuestion: "What city were you born in?",
+//           securityAnswer: "Gwalior",
+//         },
+//         {
+//           username: 'Veda',
+//           email: 'user2@example.com',
+//           password: hashedPassword2,
+//           name: 'Veda',
+//           securityQuestion: "What city were you born in?",
+//           securityAnswer: "Gwalior",
+//         }
+//       ]);
+//       console.log('✅ Users initialized: user1 and user2 with password: example@12');
+//     }
+//   } catch (error) {
+//     console.log('❌ Error initializing users:', error);
+//   }
+// };
 
-initializeUsers();
+// initializeUsers();
 
 // ============================================
 // ROUTES
@@ -416,38 +428,108 @@ app.get('/api/auth/check-username/:username', async (req, res) => {
 });
 
 // Register/Signup
+// app.post('/api/auth/signup', async (req, res) => {
+//   try {
+//     const { username, email, password, name, avatar } = req.body;
+    
+//     console.log('📥 Signup request:', { username, email, name });
+
+//     if (!username || !email || !password || !name) {
+//       return res.status(400).json({ message: 'All fields are required' });
+//     }
+
+//     const existingUsername = await User.findOne({ username: username.toLowerCase() });
+//     if (existingUsername) {
+//       return res.status(400).json({ message: 'Username already taken' });
+//     }
+
+//     const existingEmail = await User.findOne({ email: email.toLowerCase() });
+//     if (existingEmail) {
+//       return res.status(400).json({ message: 'Email already registered' });
+//     }
+
+//     const hashedPassword = await bcrypt.hash(password, 10);
+
+//     const user = new User({
+//       username: username.toLowerCase(),
+//       email: email.toLowerCase(),
+//       password: hashedPassword,
+//       name,
+//       avatar: avatar || 1
+//     });
+
+//     await user.save();
+
+//     const token = jwt.sign(
+//       { id: user._id, username: user.username },
+//       process.env.JWT_SECRET || 'karya',
+//       { expiresIn: '30d' }
+//     );
+
+//     console.log('✅ User created:', username);
+
+//     res.status(201).json({
+//       token,
+//       user: {
+//         id: user._id,
+//         username: user.username,
+//         name: user.name,
+//         email: user.email,
+//         avatar: user.avatar,
+//         level: user.level,
+//         xp: user.xp,
+//         streak: user.streak,
+//         buddies: user.buddies
+//       }
+//     });
+//   } catch (error) {
+//     console.error('❌ Signup error:', error);
+//     res.status(500).json({ message: 'Server error', error: error.message });
+//   }
+// });
+
+// UPDATE SIGNUP ENDPOINT (replace existing signup route)
 app.post('/api/auth/signup', async (req, res) => {
   try {
-    const { username, email, password, name, avatar } = req.body;
+    const { username, email, password, name, avatar, securityQuestion, securityAnswer } = req.body;
     
     console.log('📥 Signup request:', { username, email, name });
 
-    if (!username || !email || !password || !name) {
+    // Validation
+    if (!username || !email || !password || !name || !securityQuestion || !securityAnswer) {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
+    // Check if username exists
     const existingUsername = await User.findOne({ username: username.toLowerCase() });
     if (existingUsername) {
       return res.status(400).json({ message: 'Username already taken' });
     }
 
+    // Check if email exists
     const existingEmail = await User.findOne({ email: email.toLowerCase() });
     if (existingEmail) {
       return res.status(400).json({ message: 'Email already registered' });
     }
 
+    // Hash password and security answer
     const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedSecurityAnswer = await bcrypt.hash(securityAnswer.toLowerCase().trim(), 10);
 
+    // Create user
     const user = new User({
       username: username.toLowerCase(),
       email: email.toLowerCase(),
       password: hashedPassword,
       name,
-      avatar: avatar || 1
+      avatar: avatar || 1,
+      securityQuestion,
+      securityAnswer: hashedSecurityAnswer
     });
 
     await user.save();
 
+    // Generate token
     const token = jwt.sign(
       { id: user._id, username: user.username },
       process.env.JWT_SECRET || 'karya',
@@ -1483,6 +1565,194 @@ app.get('/api/leaderboard', authenticateToken, async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+// ******************************************************************************************************
+// **********************************FORGOT PASSWORD **********************************
+// ******************************************************************************************************
+
+// Update user profile (name and avatar)
+app.patch('/api/users/update-profile', authenticateToken, async (req, res) => {
+  try {
+    console.log("update called")
+    const { name, avatar } = req.body;
+    const user = await User.findById(req.user.id);
+    console.log("user to be updated: ", user);
+    
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Update name if provided
+    if (name && name.trim()) {
+      console.log("name provided")
+      user.name = name.trim();
+    }
+
+    // Update avatar if provided and valid
+    if (avatar && avatar >= 1 && avatar <= 20) {
+      user.avatar = avatar;
+    }
+
+    await user.save();
+
+    const updatedUser = await User.findById(user._id).select('-password -securityAnswer');
+    
+    console.log('✅ Profile updated for:', user.username);
+    
+    res.json({
+      message: 'Profile updated successfully',
+      user: updatedUser
+    });
+  } catch (error) {
+    console.error('❌ Profile update error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Verify security question answer
+app.post('/api/auth/verify-security', async (req, res) => {
+  try {
+    const { username, securityAnswer } = req.body;
+
+    if (!username || !securityAnswer) {
+      return res.status(400).json({ message: 'Username and security answer are required' });
+    }
+
+    const user = await User.findOne({ username: username.toLowerCase() });
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Compare security answer
+    const isMatch = await bcrypt.compare(securityAnswer.toLowerCase().trim(), user.securityAnswer);
+    
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Incorrect security answer' });
+    }
+
+    // Generate temporary token for password reset (valid for 15 minutes)
+    const resetToken = jwt.sign(
+      { id: user._id, purpose: 'password-reset' },
+      process.env.JWT_SECRET || 'karya',
+      { expiresIn: '15m' }
+    );
+
+    console.log('✅ Security question verified for:', username);
+
+    res.json({
+      message: 'Security question verified',
+      resetToken,
+      securityQuestion: user.securityQuestion
+    });
+  } catch (error) {
+    console.error('❌ Security verification error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get security question for a user
+app.get('/api/auth/security-question/:username', async (req, res) => {
+  try {
+    const { username } = req.params;
+    
+    const user = await User.findOne({ username: username.toLowerCase() })
+      .select('securityQuestion username');
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json({
+      username: user.username,
+      securityQuestion: user.securityQuestion
+    });
+  } catch (error) {
+    console.error('❌ Get security question error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Reset password using reset token
+app.post('/api/auth/reset-password', async (req, res) => {
+  try {
+    const { resetToken, newPassword } = req.body;
+
+    if (!resetToken || !newPassword) {
+      return res.status(400).json({ message: 'Reset token and new password are required' });
+    }
+
+    // Verify reset token
+    let decoded;
+    try {
+      decoded = jwt.verify(resetToken, process.env.JWT_SECRET || 'karya');
+    } catch (err) {
+      return res.status(400).json({ message: 'Invalid or expired reset token' });
+    }
+
+    if (decoded.purpose !== 'password-reset') {
+      return res.status(400).json({ message: 'Invalid reset token' });
+    }
+
+    const user = await User.findById(decoded.id);
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    
+    await user.save();
+
+    console.log('✅ Password reset for:', user.username);
+
+    res.json({ message: 'Password reset successfully' });
+  } catch (error) {
+    console.error('❌ Password reset error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Change password (when user is logged in)
+app.post('/api/auth/change-password', authenticateToken, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: 'Current password and new password are required' });
+    }
+
+    const user = await User.findById(req.user.id);
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Verify current password
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Current password is incorrect' });
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    
+    await user.save();
+
+    console.log('✅ Password changed for:', user.username);
+
+    res.json({ message: 'Password changed successfully' });
+  } catch (error) {
+    console.error('❌ Password change error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 
 // 404 handler
 app.use((req, res) => {

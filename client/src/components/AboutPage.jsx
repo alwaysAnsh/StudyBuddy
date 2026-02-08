@@ -32,7 +32,7 @@ const AboutPage = () => {
       <section className="about-hero">
         <div className="about-hero-content animate-on-scroll">
           <h1 className="about-hero-title">
-            About <span className="gradient-text">Learning App</span>
+            About <span className="gradient-text">StuddyBuddy</span>
           </h1>
           <p className="about-hero-subtitle">
             Empowering learners to achieve their goals through collaboration and accountability

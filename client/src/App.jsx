@@ -10,9 +10,10 @@ import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import UserProfile from './components/UserProfile';
 import './App.css';
-import Signup from './components/SignUp';
+import Signup from './components/Signup';
 import UserSearch from './components/UserSearch';
 import Buddies from './components/Buddies';
+import ForgotPassword from './components/ForgotPassword';
 
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated } = useSelector((state) => state.auth);
@@ -31,6 +32,7 @@ function App() {
         {/* Auth routes without Layout (full screen) */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         
         {/* Protected routes */}
         <Route
