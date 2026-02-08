@@ -904,7 +904,7 @@ const avatars = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19];
 
 const securityQuestions = [
   'What is your favorite book?',
-  'What city were you born in?',
+  'What city were you born in ?',
   "What is your mother's maiden name?",
   'What was the name of your first pet?',
   'What is your favorite movie?',
