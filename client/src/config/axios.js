@@ -2,7 +2,8 @@ import axios from 'axios';
 
 // Base URL for API
 // const BASE_URL = 'https://harshita-3fe5.onrender.com/api';
- const BASE_URL = 'http://localhost:5050/api'; 
+//  const BASE_URL = 'http://localhost:5050/api';
+ const BASE_URL = 'https://studdybuddy-oy5j.onrender.com/api'; 
 
 // Create axios instance with default config
 const axiosInstance = axios.create({
