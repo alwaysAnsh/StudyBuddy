@@ -172,7 +172,7 @@ const Login = () => {
 
           <div className="login-info">
             <p>
-              Don’t have an account? <a href="/signup">Sign up here</a>
+              Don’t have an account? <Link to="/signup">Sign up here</Link>
             </p>
             <p>
               <Link to="/forgot-password">Forgot Password?</Link>
