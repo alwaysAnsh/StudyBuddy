@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './ForgotPassword.css';
 
-const API_URL = 'http://localhost:5050/api';
+// const API_URL = 'http://localhost:5050/api';
+const API_URL = 'https://studdybuddy-oy5j.onrender.com/api';
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
