@@ -4,11 +4,11 @@ import { useSelector } from 'react-redux';
 import './Layout.css';
 
 const Layout = ({ children }) => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { isAuthenticated } = useSelector((state) => state.auth);
 
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
+  const toggleMenu = () => {
+    setIsMenuOpen((open) => !open);
   };
 
   const publicNavItems = [
@@ -27,48 +27,51 @@ const Layout = ({ children }) => {
 
   return (
     <div className="app-layout">
-      {/* Sidebar */}
-      <aside className={`sidebar ${isSidebarOpen ? 'open' : 'collapsed'}`}>
-        <div className="sidebar-header">
+      {/* Top Navigation */}
+      <header className="top-nav">
+        <div className="top-nav-inner">
           <div className="logo-container">
             {/* Logo placeholder - user will add their logo here */}
             <div className="logo-placeholder">
               <span className="logo-text">LA</span>
             </div>
-            {isSidebarOpen && <span className="app-name">StuddyBuddy</span>}
+            <span className="app-name">StuddyBuddy</span>
           </div>
+
+          <button
+            className="nav-toggle"
+            onClick={toggleMenu}
+            aria-label="Toggle navigation"
+          >
+            {isMenuOpen ? '✕' : '☰'}
+          </button>
+
+          <nav className={`top-nav-links ${isMenuOpen ? 'open' : ''}`}>
+            {navItems.map((item) => (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                className={({ isActive }) =>
+                  `nav-item ${isActive ? 'active' : ''}`
+                }
+                end={item.path === '/'}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <span className="nav-icon">{item.icon}</span>
+                <span className="nav-label">{item.name}</span>
+              </NavLink>
+            ))}
+          </nav>
         </div>
-
-        <nav className="sidebar-nav">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              className={({ isActive }) => 
-                `nav-item ${isActive ? 'active' : ''}`
-              }
-              end={item.path === '/'}
-            >
-              <span className="nav-icon">{item.icon}</span>
-              {isSidebarOpen && <span className="nav-label">{item.name}</span>}
-            </NavLink>
-          ))}
-        </nav>
-
-        <button className="sidebar-toggle" onClick={toggleSidebar}>
-          <span className="toggle-icon">
-            {isSidebarOpen ? '◀' : '▶'}
-          </span>
-        </button>
-      </aside>
+      </header>
 
       {/* Main Content */}
-      <main className={`main-content ${isSidebarOpen ? '' : 'expanded'}`}>
+      <main className="main-content">
         {children}
       </main>
 
       {/* Footer */}
-      <footer className={`app-footer ${isSidebarOpen ? '' : 'expanded'}`}>
+      <footer className="app-footer">
         <div className="footer-content">
           <div className="footer-section">
             <h3 className="footer-title">StuddyBuddy</h3>
