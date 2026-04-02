@@ -116,7 +116,7 @@ const Login = () => {
       {/* LEFT SIDE (Brand / Image) */}
       <div className="login-left">
         <div className="overlay">
-          <h1>StuddyBuddy</h1>
+          <h1>GeekBuddy</h1>
           <p>Practice, assign & grow together</p>
         </div>
       </div>

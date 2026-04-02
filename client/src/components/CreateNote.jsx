@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { createNote, getAllNotes } from '../redux/slices/noteSlice';
 import './CreateNote.css';
 import { addCustomCategory, deleteCustomCategory } from '../redux/slices/authSlice';
+import { notify } from './notify';
 
 const CreateNote = ({ onClose }) => {
   const dispatch = useDispatch();
@@ -32,7 +33,7 @@ const CreateNote = ({ onClose }) => {
 
   const handleAddCategory = async () => {
       if (!newCategory.trim()) {
-        alert('Please enter a category name');
+        notify({ type: 'error', message: 'Please enter a category name.' });
         return;
       }
   
@@ -40,31 +41,31 @@ const CreateNote = ({ onClose }) => {
         await dispatch(addCustomCategory(newCategory.trim())).unwrap();
         setNewCategory('');
         setShowAddCategory(false);
-        alert('Category added successfully!');
+        notify({ type: 'success', message: 'Category added successfully.' });
       } catch (error) {
-        alert(error || 'Failed to add category');
+        notify({ type: 'error', message: error || 'Failed to add category.' });
       }
     };
   
     const handleDeleteCategory = async (category) => {
       if (window.confirm(`Delete category "${category}"?`)) {
         try {
-          await dispatch(deleteCustomCategory(category)).unwrap();
-          if (formData.category === category) {
-            setFormData({ ...formData, category: 'DSA' });
-          }
-          alert('Category deleted successfully!');
-        } catch (error) {
-          alert(error || 'Failed to delete category');
+        await dispatch(deleteCustomCategory(category)).unwrap();
+        if (formData.category === category) {
+          setFormData({ ...formData, category: 'DSA' });
         }
+        notify({ type: 'success', message: 'Category deleted successfully.' });
+      } catch (error) {
+        notify({ type: 'error', message: error || 'Failed to delete category.' });
       }
-    };
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!formData.title.trim() || !formData.content.trim()) {
-      alert('Title and content are required');
+      notify({ type: 'error', message: 'Title and content are required.' });
       return;
     }
 
@@ -73,9 +74,10 @@ const CreateNote = ({ onClose }) => {
     try {
       await dispatch(createNote(formData)).unwrap();
       dispatch(getAllNotes());
+      notify({ type: 'success', message: 'Note created successfully.' });
       onClose();
     } catch (error) {
-      alert('Error creating note: ' + error);
+      notify({ type: 'error', message: `Error creating note: ${error}` });
     } finally {
       setIsSubmitting(false);
     }

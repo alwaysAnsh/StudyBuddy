@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { createActivity, getAllActivities } from '../redux/slices/activitySlice';
 import './CreateActivity.css';
+import { notify } from './notify';
 
 const CreateActivity = ({ onClose }) => {
   const dispatch = useDispatch();
@@ -31,7 +32,7 @@ const CreateActivity = ({ onClose }) => {
     e.preventDefault();
     
     if (!formData.title.trim() || !formData.description.trim()) {
-      alert('Title and description are required');
+      notify({ type: 'error', message: 'Title and description are required.' });
       return;
     }
 
@@ -40,9 +41,10 @@ const CreateActivity = ({ onClose }) => {
     try {
       await dispatch(createActivity(formData)).unwrap();
       dispatch(getAllActivities());
+      notify({ type: 'success', message: 'Activity posted successfully.' });
       onClose();
     } catch (error) {
-      alert('Error creating activity: ' + error);
+      notify({ type: 'error', message: `Error creating activity: ${error}` });
     } finally {
       setIsSubmitting(false);
     }

@@ -1133,7 +1133,7 @@ useEffect(() => {
         {/* RIGHT SIDE - FORM */}
         <div className="signup-form-section">
           <div className="form-wrapper">
-            <h1>Welcome to StuddyBuddy</h1>
+            <h1>Welcome to GeekBuddy</h1>
             <p className="subtitle">Join thousands of learners worldwide</p>
 
             {error && <div className="error-message">{error}</div>}

@@ -4,6 +4,7 @@ import { createTask, getBuddies, getMyTasks, getAssignedByMe } from '../redux/sl
 import { addCustomCategory, deleteCustomCategory } from '../redux/slices/authSlice';
 import './AssignTask.css';
 import { Link } from 'react-router-dom';
+import { notify } from './notify';
 
 const AssignTask = ({ onClose }) => {
   const dispatch = useDispatch();
@@ -41,7 +42,7 @@ const AssignTask = ({ onClose }) => {
 
   const handleAddCategory = async () => {
     if (!newCategory.trim()) {
-      alert('Please enter a category name');
+      notify({ type: 'error', message: 'Please enter a category name.' });
       return;
     }
 
@@ -49,9 +50,9 @@ const AssignTask = ({ onClose }) => {
       await dispatch(addCustomCategory(newCategory.trim())).unwrap();
       setNewCategory('');
       setShowAddCategory(false);
-      alert('Category added successfully!');
+      notify({ type: 'success', message: 'Category added successfully.' });
     } catch (error) {
-      alert(error || 'Failed to add category');
+      notify({ type: 'error', message: error || 'Failed to add category.' });
     }
   };
 
@@ -62,9 +63,9 @@ const AssignTask = ({ onClose }) => {
         if (formData.category === category) {
           setFormData({ ...formData, category: 'DSA' });
         }
-        alert('Category deleted successfully!');
+        notify({ type: 'success', message: 'Category deleted successfully.' });
       } catch (error) {
-        alert(error || 'Failed to delete category');
+        notify({ type: 'error', message: error || 'Failed to delete category.' });
       }
     }
   };
@@ -73,7 +74,7 @@ const AssignTask = ({ onClose }) => {
     e.preventDefault();
     
     if (!formData.assignedTo) {
-      alert('Please select a buddy to assign the task to');
+      notify({ type: 'error', message: 'Please select a buddy to assign the task to.' });
       return;
     }
 
@@ -83,9 +84,10 @@ const AssignTask = ({ onClose }) => {
       await dispatch(createTask(formData)).unwrap();
       dispatch(getMyTasks());
       dispatch(getAssignedByMe());
+      notify({ type: 'success', message: 'Task assigned successfully.' });
       onClose();
     } catch (error) {
-      alert('Error creating task: ' + error);
+      notify({ type: 'error', message: `Error creating task: ${error}` });
     } finally {
       setIsSubmitting(false);
     }
@@ -512,5 +514,4 @@ export default AssignTask;
 // };
 
 // export default AssignTask;
-
 

@@ -30,6 +30,8 @@ const Dashboard = () => {
   const [showXPNotification, setShowXPNotification] = useState(false);
   const [xpGained, setXpGained] = useState(0);
   const userMenuRef = useRef(null);
+  const toastIdRef = useRef(0);
+  const [toasts, setToasts] = useState([]);
   console.log("showusermenu: ",showUserMenu)
 
   useEffect(() => {
@@ -62,6 +64,22 @@ const Dashboard = () => {
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    const handleNotify = (event) => {
+      const { type = 'info', message = '' } = event.detail || {};
+      if (!message) return;
+      const id = toastIdRef.current + 1;
+      toastIdRef.current = id;
+      setToasts((prev) => [...prev, { id, type, message }]);
+      setTimeout(() => {
+        setToasts((prev) => prev.filter((toast) => toast.id !== id));
+      }, 3200);
+    };
+
+    window.addEventListener('app-notify', handleNotify);
+    return () => window.removeEventListener('app-notify', handleNotify);
   }, []);
 
   // imporoved code - added escape key and used pointerdown
@@ -154,6 +172,23 @@ const Dashboard = () => {
 
   return (
     <div className="professional-dashboard">
+      {toasts.length > 0 && (
+        <div className="toast-stack">
+          {toasts.map((toast) => (
+            <div key={toast.id} className={`toast-item ${toast.type}`}>
+              <span className="toast-message">{toast.message}</span>
+              <button
+                className="toast-close"
+                onClick={() =>
+                  setToasts((prev) => prev.filter((t) => t.id !== toast.id))
+                }
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
       {showXPNotification && (
         <div className="xp-notification-pro">
           <div className="xp-notification-content-pro">
@@ -168,7 +203,7 @@ const Dashboard = () => {
       <header className="professional-header">
         <div className="header-left">
           <Link to="/" className="logo-pro">
-            <span className="logo-text-pro">StuddyBuddy</span>
+            <span className="logo-text-pro">GeekBuddy</span>
           </Link>
         </div>
 
@@ -1311,5 +1346,4 @@ export default Dashboard;
 // };
 
 // export default Dashboard;
-
 

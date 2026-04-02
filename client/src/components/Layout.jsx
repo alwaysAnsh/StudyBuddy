@@ -33,9 +33,9 @@ const Layout = ({ children }) => {
           <div className="logo-container">
             {/* Logo placeholder - user will add their logo here */}
             <div className="logo-placeholder">
-              <span className="logo-text">LA</span>
+              <span className="logo-text">GB</span>
             </div>
-            <span className="app-name">StuddyBuddy</span>
+            <span className="app-name">GeekBuddy</span>
           </div>
 
           <button
@@ -74,7 +74,7 @@ const Layout = ({ children }) => {
       <footer className="app-footer">
         <div className="footer-content">
           <div className="footer-section">
-            <h3 className="footer-title">StuddyBuddy</h3>
+            <h3 className="footer-title">GeekBuddy</h3>
             <p className="footer-tagline">
               Master your learning journey together
             </p>
@@ -111,7 +111,7 @@ const Layout = ({ children }) => {
 
         <div className="footer-bottom">
           <p className="copyright">
-            © {new Date().getFullYear()} StuddyBuddy. All rights reserved.
+            © {new Date().getFullYear()} GeekBuddy. All rights reserved.
           </p>
           <div className="footer-legal">
             <a href="#">Privacy Policy</a>

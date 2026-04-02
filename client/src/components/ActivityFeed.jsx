@@ -138,7 +138,7 @@ const ActivityFeed = () => {
           <h2>Activity Feed</h2>
           <p>Share what you've accomplished and see what others are doing</p>
         </div>
-        <button className="create-note-btn-pro" onClick={() => setShowPostModal(true)}>
+        <button className="create-activity-btn-pro" onClick={() => setShowPostModal(true)}>
           Post Activity
         </button>
       </div>

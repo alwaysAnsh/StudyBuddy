@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { deleteNote, updateNote } from '../redux/slices/noteSlice';
 import './NoteCard.css';
+import { notify } from './notify';
 
 const NoteCard = ({ note, onViewFull }) => {
   const dispatch = useDispatch();
@@ -17,12 +18,13 @@ const NoteCard = ({ note, onViewFull }) => {
   const handleDelete = () => {
     if (window.confirm('Are you sure you want to delete this note?')) {
       dispatch(deleteNote(note._id));
+      notify({ type: 'success', message: 'Note deleted.' });
     }
   };
 
   const handleUpdate = () => {
     if (!editTitle.trim() || !editContent.trim()) {
-      alert('Title and content are required');
+      notify({ type: 'error', message: 'Title and content are required.' });
       return;
     }
     dispatch(updateNote({
@@ -31,6 +33,7 @@ const NoteCard = ({ note, onViewFull }) => {
       content: editContent,
       category: editCategory
     }));
+    notify({ type: 'success', message: 'Note updated successfully.' });
     setIsEditing(false);
   };
 

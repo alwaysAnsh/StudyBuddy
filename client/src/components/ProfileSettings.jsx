@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateUserProfile, changePassword } from '../redux/slices/authSlice';
 import './ProfileSettings.css';
+import { notify } from './notify';
 
 const ProfileSettings = ({ onClose }) => {
   const dispatch = useDispatch();
@@ -56,7 +57,7 @@ const ProfileSettings = ({ onClose }) => {
     e.preventDefault();
     // remove debugger during normal flow
     if (!name.trim()) {
-      alert('Name cannot be empty');
+      notify({ type: 'error', message: 'Name cannot be empty.' });
       return;
     }
 
@@ -76,12 +77,12 @@ const ProfileSettings = ({ onClose }) => {
       // Check whether thunk fulfilled or rejected
       if (updateUserProfile.fulfilled.match(resultAction)) {
         console.log('Profile update fulfilled:', resultAction.payload);
-        alert('Profile updated successfully!');
+        notify({ type: 'success', message: 'Profile updated successfully.' });
         onClose();
       } else {
         console.error('Profile update rejected action:', resultAction);
         const errMsg = resultAction.payload?.message || resultAction.error?.message || JSON.stringify(resultAction);
-        alert(errMsg || 'Failed to update profile');
+        notify({ type: 'error', message: errMsg || 'Failed to update profile.' });
       }
     } catch (error) {
       // More robust error parsing for axios / thunk errors
@@ -91,7 +92,7 @@ const ProfileSettings = ({ onClose }) => {
         error?.payload?.message ||
         error?.response?.data?.message ||
         (typeof error === 'string' ? error : JSON.stringify(error));
-      alert(message || 'Failed to update profile');
+      notify({ type: 'error', message: message || 'Failed to update profile.' });
     } finally {
       setIsUpdating(false);
     }
@@ -101,17 +102,17 @@ const ProfileSettings = ({ onClose }) => {
     e.preventDefault();
     
     if (!currentPassword || !newPassword || !confirmPassword) {
-      alert('All password fields are required');
+      notify({ type: 'error', message: 'All password fields are required.' });
       return;
     }
 
     if (newPassword.length < 6) {
-      alert('New password must be at least 6 characters');
+      notify({ type: 'error', message: 'New password must be at least 6 characters.' });
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      alert('New passwords do not match');
+      notify({ type: 'error', message: 'New passwords do not match.' });
       return;
     }
 
@@ -123,12 +124,12 @@ const ProfileSettings = ({ onClose }) => {
         newPassword
       })).unwrap();
       
-      alert('Password changed successfully!');
+      notify({ type: 'success', message: 'Password changed successfully.' });
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
     } catch (error) {
-      alert(error || 'Failed to change password');
+      notify({ type: 'error', message: error || 'Failed to change password.' });
     } finally {
       setIsUpdating(false);
     }

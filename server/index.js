@@ -9,7 +9,7 @@ dotenv.config();
 const app = express();
 
 // ============================================
-// CORS - Simple and Permissive for Development
+// CORS - Simple and Permissive for Development.     https://studdy-buddy-rosy.vercel.app , http://localhost:5173
 // ============================================
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', 'https://studdy-buddy-rosy.vercel.app');

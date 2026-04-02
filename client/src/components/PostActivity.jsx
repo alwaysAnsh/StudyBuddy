@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { createActivity, getAllActivities } from '../redux/slices/activitySlice';
 import './PostActivity.css';
 import { addCustomCategory, deleteCustomCategory } from '../redux/slices/authSlice';
+import { notify } from './notify';
 
 const PostActivity = ({ onClose }) => {
   const dispatch = useDispatch();
@@ -33,7 +34,7 @@ const PostActivity = ({ onClose }) => {
 
   const handleAddCategory = async () => {
       if (!newCategory.trim()) {
-        alert('Please enter a category name');
+        notify({ type: 'error', message: 'Please enter a category name.' });
         return;
       }
   
@@ -41,31 +42,31 @@ const PostActivity = ({ onClose }) => {
         await dispatch(addCustomCategory(newCategory.trim())).unwrap();
         setNewCategory('');
         setShowAddCategory(false);
-        alert('Category added successfully!');
+        notify({ type: 'success', message: 'Category added successfully.' });
       } catch (error) {
-        alert(error || 'Failed to add category');
+        notify({ type: 'error', message: error || 'Failed to add category.' });
       }
     };
   
     const handleDeleteCategory = async (category) => {
       if (window.confirm(`Delete category "${category}"?`)) {
         try {
-          await dispatch(deleteCustomCategory(category)).unwrap();
-          if (formData.category === category) {
-            setFormData({ ...formData, category: 'DSA' });
-          }
-          alert('Category deleted successfully!');
-        } catch (error) {
-          alert(error || 'Failed to delete category');
+        await dispatch(deleteCustomCategory(category)).unwrap();
+        if (formData.category === category) {
+          setFormData({ ...formData, category: 'DSA' });
         }
+        notify({ type: 'success', message: 'Category deleted successfully.' });
+      } catch (error) {
+        notify({ type: 'error', message: error || 'Failed to delete category.' });
       }
-    };
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!formData.title.trim() || !formData.description.trim()) {
-      alert('Title and description are required');
+      notify({ type: 'error', message: 'Title and description are required.' });
       return;
     }
 
@@ -74,9 +75,10 @@ const PostActivity = ({ onClose }) => {
     try {
       await dispatch(createActivity(formData)).unwrap();
       dispatch(getAllActivities());
+      notify({ type: 'success', message: 'Activity posted successfully.' });
       onClose();
     } catch (error) {
-      alert('Error posting activity: ' + error);
+      notify({ type: 'error', message: `Error posting activity: ${error}` });
     } finally {
       setIsSubmitting(false);
     }
