@@ -35,6 +35,7 @@
   bottom: -140px;
   background: radial-gradient(circle, rgba(34, 211, 238, 0.35), transparent 70%);
   opacity: 0.8;
+  pointer-events: none;
 }
 
 .login-left .overlay {
