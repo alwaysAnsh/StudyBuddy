@@ -686,7 +686,7 @@
     height: 78px;
   }
 }
-@media (max-width: 320px) {
+@media (max-width: 425px) {
   .logo-text-pro {
     font-size: 1rem;
   }
