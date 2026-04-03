@@ -129,7 +129,7 @@ const Dashboard = () => {
     navigate(`/profile/${user?.username}`);
   };
 
-  const defaultCategories = ['DSA', 'System Design', 'Web Dev', 'React', 'JavaScript', 'Other'];
+  const defaultCategories = ['DSA', 'System Design', 'Web Dev', 'React', 'JavaScript'];
 
   const ALL_CATEGORIES = [
     ...new Set([

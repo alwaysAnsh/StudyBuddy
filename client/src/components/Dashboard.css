@@ -686,3 +686,49 @@
     height: 78px;
   }
 }
+@media (max-width: 320px) {
+  .logo-text-pro {
+    font-size: 1rem;
+  }
+
+  .header-btn-pro {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.75rem;
+  }
+
+  .profile-avatar-pro img {
+    width: 64px;
+    height: 64px;
+  }
+  .profile-name-pro {
+    font-size: 1rem;
+  }
+  .user-profile-card-pro {
+    width: 100%;
+  }
+  .professional-dashboard{
+    width: 475px;
+    /* margin: 0 auto; */
+  }
+  .dashboard-layout-pro{
+    width: 460px;
+    margin-left: -9px;
+    
+    /* overflow-x: hidden; */
+  }
+  .tabs-container-pro {
+    width: 450px;
+    overflow-x: scroll;
+  }
+  .category-pills-pro {
+    width: 450px;
+    overflow-x: scroll;
+    /* border: 2px solid red; */
+  }
+  .tasks-horizontal-scroll {
+    width: 410px;
+    overflow-x: scroll;
+  }
+  
+  
+}
