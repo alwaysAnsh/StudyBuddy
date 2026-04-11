@@ -12,10 +12,16 @@ import {
   removeBuddy,
   clearSearchResults
 } from '../redux/slices/buddySlice';
+import { markScopeRead } from '../redux/slices/notificationSlice';
+import { useConfirm } from '../context/ConfirmContext';
+import { notify } from '../utils/notify';
+import AppPageHeader from './AppPageHeader';
+import { resolveUserAvatarUrl, uiAvatarsFallback } from '../utils/avatarUrl';
 import './Buddies.css';
 
 const Buddies = () => {
   const dispatch = useDispatch();
+  const { confirm } = useConfirm();
   const { buddies, searchResults, receivedRequests, sentRequests, isLoading } = useSelector(
     (state) => state.buddies
   );
@@ -29,34 +35,41 @@ const Buddies = () => {
 
   const [activeTab, setActiveTab] = useState('buddies');
   const [searchQuery, setSearchQuery] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
     dispatch(getBuddies());
     dispatch(getReceivedRequests());
     dispatch(getSentRequests());
+    dispatch(markScopeRead('buddies'));
   }, [dispatch]);
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (searchQuery.trim().length < 2) {
-      alert('Please enter at least 2 characters');
-      return;
+  useEffect(() => {
+    if (activeTab !== 'search') return undefined;
+
+    const q = searchQuery.trim();
+    if (q.length < 2) {
+      dispatch(clearSearchResults());
+      return undefined;
     }
-    setIsSearching(true);
-    await dispatch(searchUsers(searchQuery));
-    setIsSearching(false);
-  };
+
+    const t = setTimeout(() => {
+      dispatch(searchUsers(q));
+    }, 400);
+
+    return () => clearTimeout(t);
+  }, [searchQuery, activeTab, dispatch]);
 
   const handleSendRequest = async (userId) => {
     try {
       await dispatch(sendBuddyRequest(userId)).unwrap();
-      alert('Buddy request sent!');
-      // setBuddyRequestSent(true)
-      dispatch(searchUsers(searchQuery)); // Refresh search results
+      notify({ type: 'success', message: 'Buddy request sent.' });
+      const q = searchQuery.trim();
+      if (q.length >= 2) {
+        dispatch(searchUsers(q));
+      }
       dispatch(getSentRequests());
     } catch (error) {
-      alert(error || 'Failed to send request');
+      notify({ type: 'error', message: error || 'Failed to send request' });
     }
   };
 
@@ -64,40 +77,50 @@ const Buddies = () => {
     try {
       await dispatch(acceptBuddyRequest(requestId)).unwrap();
       dispatch(getBuddies());
-      alert('Buddy request accepted!');
+      notify({ type: 'success', message: 'Buddy request accepted.' });
     } catch (error) {
-      alert(error || 'Failed to accept request');
+      notify({ type: 'error', message: error || 'Failed to accept request' });
     }
   };
 
   const handleRejectRequest = async (requestId) => {
     try {
       await dispatch(rejectBuddyRequest(requestId)).unwrap();
-      alert('Buddy request rejected');
+      notify({ type: 'success', message: 'Buddy request rejected.' });
     } catch (error) {
-      alert(error || 'Failed to reject request');
+      notify({ type: 'error', message: error || 'Failed to reject request' });
     }
   };
 
   const handleCancelRequest = async (requestId) => {
-    if (window.confirm('Cancel this buddy request?')) {
-      try {
-        await dispatch(cancelBuddyRequest(requestId)).unwrap();
-        alert('Buddy request cancelled');
-      } catch (error) {
-        alert(error || 'Failed to cancel request');
-      }
+    const ok = await confirm({
+      title: 'Cancel buddy request?',
+      message: 'The other person will no longer see this pending request.',
+      confirmLabel: 'Cancel request',
+      variant: 'danger',
+    });
+    if (!ok) return;
+    try {
+      await dispatch(cancelBuddyRequest(requestId)).unwrap();
+      notify({ type: 'success', message: 'Buddy request cancelled.' });
+    } catch (error) {
+      notify({ type: 'error', message: error || 'Failed to cancel request' });
     }
   };
 
   const handleRemoveBuddy = async (buddyId, buddyName) => {
-    if (window.confirm(`Remove ${buddyName} from your buddies?`)) {
-      try {
-        await dispatch(removeBuddy(buddyId)).unwrap();
-        alert('Buddy removed');
-      } catch (error) {
-        alert(error || 'Failed to remove buddy');
-      }
+    const ok = await confirm({
+      title: `Remove ${buddyName}?`,
+      message: 'You can send a new request later if you change your mind.',
+      confirmLabel: 'Remove buddy',
+      variant: 'danger',
+    });
+    if (!ok) return;
+    try {
+      await dispatch(removeBuddy(buddyId)).unwrap();
+      notify({ type: 'success', message: 'Buddy removed.' });
+    } catch (error) {
+      notify({ type: 'error', message: error || 'Failed to remove buddy' });
     }
   };
 
@@ -107,12 +130,9 @@ const Buddies = () => {
     // setBuddyRequestSent(false)
   };
 
-  const getAvatarUrl = (avatarNum) => {
-    return `https://api.dicebear.com/7.x/avataaars/svg?seed=${avatarNum}`;
-  };
-
   return (
     <div className="buddies-container">
+      <AppPageHeader />
       <div className="buddies-header">
         <h1>🤝 Buddies</h1>
         <p className="buddies-subtitle">Connect with friends to assign tasks</p>
@@ -162,9 +182,12 @@ const Buddies = () => {
                 {buddies.map((buddy) => (
                   <div key={buddy._id} className="buddy-card">
                     <img
-                      src={getAvatarUrl(buddy.avatar)}
+                      src={resolveUserAvatarUrl(buddy)}
                       alt={buddy.name}
                       className="buddy-avatar"
+                      onError={(e) => {
+                        e.target.src = uiAvatarsFallback(buddy.name);
+                      }}
                     />
                     <div className="buddy-info">
                       <h3>{buddy.name}</h3>
@@ -198,9 +221,12 @@ const Buddies = () => {
                 {receivedRequests.map((request) => (
                   <div key={request._id} className="request-card">
                     <img
-                      src={getAvatarUrl(request.sender.avatar)}
+                      src={resolveUserAvatarUrl(request.sender)}
                       alt={request.sender.name}
                       className="request-avatar"
+                      onError={(e) => {
+                        e.target.src = uiAvatarsFallback(request.sender.name);
+                      }}
                     />
                     <div className="request-info">
                       <h3>{request.sender.name}</h3>
@@ -233,9 +259,12 @@ const Buddies = () => {
                 {sentRequests.map((request) => (
                   <div key={request._id} className="request-card">
                     <img
-                      src={getAvatarUrl(request.receiver.avatar)}
+                      src={resolveUserAvatarUrl(request.receiver)}
                       alt={request.receiver.name}
                       className="request-avatar"
+                      onError={(e) => {
+                        e.target.src = uiAvatarsFallback(request.receiver.name);
+                      }}
                     />
                     <div className="request-info">
                       <h3>{request.receiver.name}</h3>
@@ -258,32 +287,33 @@ const Buddies = () => {
         {/* SEARCH TAB */}
         {activeTab === 'search' && (
           <div className="tab-panel">
-            <form onSubmit={handleSearch} className="search-form">
+            <div className="search-form">
               <input
                 type="text"
-                placeholder="Search by username..."
+                placeholder="Search by username (type at least 2 characters)..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="search-input"
+                aria-label="Search users by username"
               />
-              <button type="submit" className="search-btn" disabled={isSearching}>
-                {isSearching ? 'Searching...' : 'Search'}
-              </button>
               {searchResults.length > 0 && (
                 <button type="button" className="clear-btn" onClick={clearSearch}>
                   Clear
                 </button>
               )}
-            </form>
+            </div>
 
             {searchResults.length > 0 && (
               <div className="search-results">
                 {searchResults.map((user) => (
                   <div key={user._id} className="search-result-card">
                     <img
-                      src={getAvatarUrl(user.avatar)}
+                      src={resolveUserAvatarUrl(user)}
                       alt={user.name}
                       className="result-avatar"
+                      onError={(e) => {
+                        e.target.src = uiAvatarsFallback(user.name);
+                      }}
                     />
                     <div className="result-info">
                       <h3>{user.name}</h3>
