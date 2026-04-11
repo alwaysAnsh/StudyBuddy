@@ -92,3 +92,26 @@
   font-size: 18px;
   color: #94a3b8;
 }
+
+@media (max-width: 640px) {
+  .user-search-modal.modal-content {
+    max-height: min(88dvh, calc(100vh - 2rem));
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .user-search-modal .search-container {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .user-search-modal .search-results {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+}

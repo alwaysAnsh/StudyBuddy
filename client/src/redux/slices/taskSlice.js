@@ -199,10 +199,11 @@ const taskSlice = createSlice({
       })
       // Update task status
       .addCase(updateTaskStatus.fulfilled, (state, action) => {
-        const index = state.myTasks.findIndex(task => task._id === action.payload._id);
-        if (index !== -1) {
-          state.myTasks[index] = action.payload;
-        }
+        const id = action.payload._id;
+        const myIdx = state.myTasks.findIndex((t) => t._id === id);
+        if (myIdx !== -1) state.myTasks[myIdx] = action.payload;
+        const assignedIdx = state.assignedByMe.findIndex((t) => t._id === id);
+        if (assignedIdx !== -1) state.assignedByMe[assignedIdx] = action.payload;
       })
       // Delete task
       .addCase(deleteTask.fulfilled, (state, action) => {

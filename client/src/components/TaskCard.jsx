@@ -1,15 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateTaskStatus, deleteTask } from '../redux/slices/taskSlice';
+import { notify } from '../utils/notify';
+import { useConfirm } from '../context/ConfirmContext';
 import './TaskCard.css';
 
 const TaskCard = ({ task, showAssignedTo, onXPGained }) => {
   const dispatch = useDispatch();
+  const { confirm } = useConfirm();
   const { user } = useSelector((state) => state.auth);
+  const [expanded, setExpanded] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
   const [notes, setNotes] = useState(task.notes || '');
   const [isEditing, setIsEditing] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+
+  useEffect(() => {
+    setNotes(task.notes || '');
+  }, [task._id, task.notes]);
 
   const statusOptions = [
     { value: 'not completed', label: 'Not Started' },
@@ -27,7 +35,8 @@ const TaskCard = ({ task, showAssignedTo, onXPGained }) => {
 
   const handleStatusChange = async (newStatus) => {
     if (isUpdating) return;
-    
+    if (newStatus === task.status) return;
+
     setIsUpdating(true);
     try {
       const result = await dispatch(updateTaskStatus({ 
@@ -38,6 +47,16 @@ const TaskCard = ({ task, showAssignedTo, onXPGained }) => {
       
       if (result.xpEarned && result.xpEarned > 0 && onXPGained) {
         onXPGained(result.xpEarned);
+      }
+      if (newStatus === 'completed' && result.xpEarned > 0) {
+        notify({
+          type: 'success',
+          message: `Task completed! +${result.xpEarned} XP`,
+        });
+      } else if (newStatus === 'completed') {
+        notify({ type: 'success', message: 'Task marked as completed.' });
+      } else {
+        notify({ type: 'success', message: 'Task status updated.' });
       }
     } catch (error) {
       console.error('Failed to update task:', error);
@@ -54,14 +73,24 @@ const TaskCard = ({ task, showAssignedTo, onXPGained }) => {
         notes 
       })).unwrap();
       setIsEditing(false);
+      notify({ type: 'success', message: 'Notes saved.' });
     } catch (error) {
       console.error('Failed to update notes:', error);
     }
   };
 
-  const handleDelete = () => {
-    if (window.confirm('Are you sure you want to delete this task?')) {
-      dispatch(deleteTask(task._id));
+  const handleDelete = async () => {
+    const ok = await confirm({
+      title: 'Delete this task?',
+      message: 'This cannot be undone.',
+      confirmLabel: 'Delete',
+      variant: 'danger',
+    });
+    if (!ok) return;
+    try {
+      await dispatch(deleteTask(task._id)).unwrap();
+    } catch (error) {
+      console.error('Failed to delete task:', error);
     }
   };
 
@@ -70,143 +99,170 @@ const TaskCard = ({ task, showAssignedTo, onXPGained }) => {
   const statusColor = statusColors[task.status];
   const canEarnXP = isMyTask && !task.xpAwarded && task.status !== 'completed';
 
+  const assigneeLabel = showAssignedTo ? task.assignedTo.name : task.assignedBy.name;
+  const assigneeKind = showAssignedTo ? 'Assigned to' : 'Assigned by';
+
   return (
     <div className="professional-task-card">
       <div className="task-header-pro">
         <div className="task-category-pro">{task.category}</div>
-        <button className="task-delete-pro" onClick={handleDelete} title="Delete task">
+        <button type="button" className="task-delete-pro" onClick={handleDelete} title="Delete task">
           &times;
         </button>
       </div>
 
-      {canEarnXP && (
-        <div className="xp-badge-pro available">+10 XP Available</div>
-      )}
-      
-      {task.xpAwarded && (
-        <div className="xp-badge-pro earned">XP Earned</div>
-      )}
-
       <h3 className="task-title-pro">{task.title}</h3>
 
-      {/* <div 
-        className="task-status-pro"
-        style={{
-          background: statusColor.bg,
-          color: statusColor.text
-        }}
-      >
-        {currentStatus?.label}
-      </div> */}
-
-      <div className="task-meta-pro">
-        <div className="meta-row-pro">
-          <span className="meta-label-pro">Assigned by:</span>
-          <span className="meta-value-pro">
-            {showAssignedTo ? task.assignedTo.name : task.assignedBy.name}
+      <div className="task-card-summary-pro">
+        <div className="task-summary-row-pro">
+          <span className="task-summary-assign-pro">
+            {assigneeKind}: <strong>{assigneeLabel}</strong>
+          </span>
+          <span
+            className="task-status-pill-pro"
+            style={{
+              background: statusColor.bg,
+              color: statusColor.text,
+            }}
+          >
+            {currentStatus?.label}
           </span>
         </div>
-        <div className="meta-row-pro">
-          <span className="meta-label-pro">Date:</span>
-          <span className="meta-value-pro">
-            {new Date(task.createdAt).toLocaleDateString('en-US', { 
-              month: 'short', 
-              day: 'numeric',
-              year: 'numeric'
-            })}
-          </span>
-        </div>
+        <button
+          type="button"
+          className="task-expand-toggle-pro"
+          onClick={() => setExpanded((v) => !v)}
+          aria-expanded={expanded}
+        >
+          {expanded ? 'Hide details' : 'Show details'}
+        </button>
       </div>
 
-      {task.completionCount > 0 && (
-        <div className="completion-badge-pro">
-          Completed {task.completionCount} {task.completionCount === 1 ? 'time' : 'times'}
-        </div>
-      )}
+      {expanded && (
+        <>
+          {canEarnXP && (
+            <div className="xp-badge-pro available">+10 XP Available</div>
+          )}
 
-      {isMyTask && (
-        <div className="status-selector-pro">
-          <label className="status-label-pro">Update Status:</label>
-          <div className="status-options-pro">
-            {statusOptions.map(status => (
-              <button
-                key={status.value}
-                className={`status-btn-pro ${task.status === status.value ? 'active' : ''}`}
-                onClick={() => handleStatusChange(status.value)}
-                disabled={isUpdating}
-                style={{
-                  backgroundColor: task.status === status.value ? statusColors[status.value].bg : '#f3f4f6',
-                  color: task.status === status.value ? '#ffffff' : '#374151',
-                  borderColor: task.status === status.value ? statusColors[status.value].bg : '#d1d5db'
-                }}
-              >
-                {status.label}
-              </button>
-            ))}
+          {task.xpAwarded && (
+            <div className="xp-badge-pro earned">XP Earned</div>
+          )}
+
+          <div className="task-meta-pro">
+            <div className="meta-row-pro">
+              <span className="meta-label-pro">{assigneeKind}:</span>
+              <span className="meta-value-pro">{assigneeLabel}</span>
+            </div>
+            <div className="meta-row-pro">
+              <span className="meta-label-pro">Date:</span>
+              <span className="meta-value-pro">
+                {new Date(task.createdAt).toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric',
+                })}
+              </span>
+            </div>
           </div>
-          {isUpdating && <div className="updating-text-pro">Updating...</div>}
-        </div>
-      )}
 
-      <div className="notes-section-pro">
-        <button 
-          className="notes-toggle-pro"
-          onClick={() => setShowNotes(!showNotes)}
-        >
-          {showNotes ? '▼' : '▶'} Notes
-        </button>
+          {task.completionCount > 0 && (
+            <div className="completion-badge-pro">
+              Completed {task.completionCount}{' '}
+              {task.completionCount === 1 ? 'time' : 'times'}
+            </div>
+          )}
 
-        {showNotes && (
-          <div className="notes-content-pro">
-            {isMyTask && isEditing ? (
-              <div className="notes-editor-pro">
-                <textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Add your notes here..."
-                  rows="4"
-                  className="notes-textarea-pro"
-                />
-                <div className="notes-actions-pro">
-                  <button className="btn-save-pro" onClick={handleNotesUpdate}>
-                    Save Notes
-                  </button>
-                  <button 
-                    className="btn-cancel-pro" 
-                    onClick={() => {
-                      setIsEditing(false);
-                      setNotes(task.notes || '');
+          {isMyTask && (
+            <div className="status-selector-pro">
+              <label className="status-label-pro">Update Status:</label>
+              <div className="status-options-pro">
+                {statusOptions.map((status) => (
+                  <button
+                    key={status.value}
+                    type="button"
+                    className={`status-btn-pro ${task.status === status.value ? 'active' : ''}`}
+                    onClick={() => handleStatusChange(status.value)}
+                    disabled={isUpdating}
+                    style={{
+                      backgroundColor:
+                        task.status === status.value
+                          ? statusColors[status.value].bg
+                          : '#f3f4f6',
+                      color: task.status === status.value ? '#ffffff' : '#374151',
+                      borderColor:
+                        task.status === status.value
+                          ? statusColors[status.value].bg
+                          : '#d1d5db',
                     }}
                   >
-                    Cancel
+                    {status.label}
                   </button>
-                </div>
+                ))}
               </div>
-            ) : (
-              <div className="notes-display-pro">
-                <p className="notes-text-pro">{notes || 'No notes added yet.'}</p>
-                {isMyTask && (
-                  <button 
-                    className="btn-edit-pro" 
-                    onClick={() => setIsEditing(true)}
-                  >
-                    Edit Notes
-                  </button>
+              {isUpdating && <div className="updating-text-pro">Updating...</div>}
+            </div>
+          )}
+
+          <div className="notes-section-pro">
+            <button
+              type="button"
+              className="notes-toggle-pro"
+              onClick={() => setShowNotes(!showNotes)}
+            >
+              {showNotes ? '▼' : '▶'} Notes
+            </button>
+
+            {showNotes && (
+              <div className="notes-content-pro">
+                {isMyTask && isEditing ? (
+                  <div className="notes-editor-pro">
+                    <textarea
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      placeholder="Add your notes here..."
+                      rows="4"
+                      className="notes-textarea-pro"
+                    />
+                    <div className="notes-actions-pro">
+                      <button type="button" className="btn-save-pro" onClick={handleNotesUpdate}>
+                        Save Notes
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-cancel-pro"
+                        onClick={() => {
+                          setIsEditing(false);
+                          setNotes(task.notes || '');
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="notes-display-pro">
+                    <p className="notes-text-pro">{notes || 'No notes added yet.'}</p>
+                    {isMyTask && (
+                      <button type="button" className="btn-edit-pro" onClick={() => setIsEditing(true)}>
+                        Edit Notes
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
             )}
           </div>
-        )}
-      </div>
 
-      <a 
-        href={task.link} 
-        target="_blank" 
-        rel="noopener noreferrer" 
-        className="task-link-btn-pro"
-      >
-        Open Task
-      </a>
+          <a
+            href={task.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="task-link-btn-pro"
+          >
+            Open Task
+          </a>
+        </>
+      )}
     </div>
   );
 };

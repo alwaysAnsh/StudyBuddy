@@ -1,0 +1,83 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap');
+
+.confirm-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 12000;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  backdrop-filter: blur(6px);
+}
+
+.confirm-modal {
+  width: 100%;
+  max-width: 420px;
+  background: #fff;
+  border-radius: 18px;
+  padding: 1.5rem 1.6rem;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  font-family: 'Sora', system-ui, -apple-system, sans-serif;
+}
+
+.confirm-modal-title {
+  margin: 0 0 0.65rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #0b1220;
+}
+
+.confirm-modal-body {
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: #475569;
+  margin-bottom: 1.35rem;
+}
+
+.confirm-modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: flex-end;
+}
+
+.confirm-modal-btn {
+  padding: 0.55rem 1.15rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border: 1px solid #d4dee9;
+  background: #fff;
+  color: #334155;
+  font-family: inherit;
+}
+
+.confirm-modal-btn.cancel:hover:not(:disabled) {
+  background: #f8fafc;
+}
+
+.confirm-modal-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.confirm-modal-btn.primary {
+  background: linear-gradient(135deg, #34d399 0%, #22d3ee 50%, #38bdf8 100%);
+  color: #0b1220;
+  border-color: transparent;
+  box-shadow: 0 8px 18px rgba(56, 189, 248, 0.25);
+}
+
+.confirm-modal-btn.danger {
+  background: #fef2f2;
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+
+.confirm-modal-btn.danger:hover:not(:disabled) {
+  background: #fee2e2;
+}

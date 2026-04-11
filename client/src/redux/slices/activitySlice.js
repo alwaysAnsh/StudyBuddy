@@ -1,12 +1,17 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axiosInstance from '../../config/axios';
 
-// Get all activities
-export const getAllActivities = createAsyncThunk(
-  'activities/getAllActivities',
-  async (_, { rejectWithValue }) => {
+const PAGE_LIMIT = 15;
+
+export const getActivitiesPage = createAsyncThunk(
+  'activities/getActivitiesPage',
+  async ({ skip = 0, append = false, tags = '' }, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get('/activities');
+      const params = { skip, limit: PAGE_LIMIT };
+      if (tags && String(tags).trim()) {
+        params.tags = String(tags).trim();
+      }
+      const response = await axiosInstance.get('/activities', { params });
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch activities');
@@ -27,15 +32,14 @@ export const createActivity = createAsyncThunk(
   }
 );
 
-// Toggle completion (I did this too)
-export const toggleCompletion = createAsyncThunk(
-  'activities/toggleCompletion',
+export const toggleSupport = createAsyncThunk(
+  'activities/toggleSupport',
   async (id, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.patch(`/activities/${id}/toggle-completion`);
+      const response = await axiosInstance.patch(`/activities/${id}/support`);
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to toggle completion');
+      return rejectWithValue(error.response?.data?.message || 'Failed to update support');
     }
   }
 );
@@ -57,7 +61,9 @@ const activitySlice = createSlice({
   name: 'activities',
   initialState: {
     activities: [],
+    hasMore: true,
     isLoading: false,
+    isLoadingMore: false,
     error: null,
   },
   reducers: {
@@ -67,32 +73,50 @@ const activitySlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Get all activities
-      .addCase(getAllActivities.pending, (state) => {
-        state.isLoading = true;
+      .addCase(getActivitiesPage.pending, (state, action) => {
+        state.error = null;
+        if (action.meta.arg?.append) {
+          state.isLoadingMore = true;
+        } else {
+          state.isLoading = true;
+          state.activities = [];
+          state.hasMore = true;
+        }
       })
-      .addCase(getAllActivities.fulfilled, (state, action) => {
+      .addCase(getActivitiesPage.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.activities = action.payload;
+        state.isLoadingMore = false;
+        const { items = [], hasMore = false } = action.payload || {};
+        if (action.meta.arg?.append) {
+          const seen = new Set(state.activities.map((a) => String(a._id)));
+          for (const row of items) {
+            const id = String(row._id);
+            if (!seen.has(id)) {
+              seen.add(id);
+              state.activities.push(row);
+            }
+          }
+        } else {
+          state.activities = items;
+        }
+        state.hasMore = hasMore;
       })
-      .addCase(getAllActivities.rejected, (state, action) => {
+      .addCase(getActivitiesPage.rejected, (state, action) => {
         state.isLoading = false;
+        state.isLoadingMore = false;
         state.error = action.payload;
       })
-      // Create activity
       .addCase(createActivity.fulfilled, (state, action) => {
         state.activities.unshift(action.payload);
       })
-      // Toggle completion
-      .addCase(toggleCompletion.fulfilled, (state, action) => {
-        const index = state.activities.findIndex(activity => activity._id === action.payload._id);
+      .addCase(toggleSupport.fulfilled, (state, action) => {
+        const index = state.activities.findIndex((activity) => activity._id === action.payload._id);
         if (index !== -1) {
           state.activities[index] = action.payload;
         }
       })
-      // Delete activity
       .addCase(deleteActivity.fulfilled, (state, action) => {
-        state.activities = state.activities.filter(activity => activity._id !== action.payload);
+        state.activities = state.activities.filter((activity) => activity._id !== action.payload);
       });
   },
 });

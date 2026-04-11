@@ -220,6 +220,7 @@ const authSlice = createSlice({
       // Get current user
       .addCase(getCurrentUser.fulfilled, (state, action) => {
         state.user = action.payload;
+        localStorage.setItem('user', JSON.stringify(action.payload));
       })
       // Update profile
       // .addCase(updateProfile.fulfilled, (state, action) => {
@@ -261,6 +262,7 @@ const authSlice = createSlice({
       .addCase(updateUserProfile.fulfilled, (state, action) => {
         state.isLoading = false;
         state.user = action.payload;
+        localStorage.setItem('user', JSON.stringify(action.payload));
       })
       .addCase(updateUserProfile.rejected, (state, action) => {
         state.isLoading = false;

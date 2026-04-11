@@ -1,232 +1,180 @@
 import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { createActivity, getAllActivities } from '../redux/slices/activitySlice';
+import { useDispatch } from 'react-redux';
+import { createActivity } from '../redux/slices/activitySlice';
+import { getCurrentUser } from '../redux/slices/authSlice';
 import './PostActivity.css';
-import { addCustomCategory, deleteCustomCategory } from '../redux/slices/authSlice';
-import { notify } from './notify';
+import { notify } from '../utils/notify';
+import axiosInstance from '../config/axios';
+import { collectHashtags } from '../utils/activityHashtags';
 
-const PostActivity = ({ onClose }) => {
+const uploadsOrigin = () => {
+  const base = axiosInstance.defaults.baseURL || '';
+  return base.replace(/\/api\/?$/i, '') || '';
+};
+
+const XP_ACTIVITY_POST = 7;
+
+const PostActivity = ({ onClose, onXPGained }) => {
   const dispatch = useDispatch();
-  const { user } = useSelector((state) => state.auth);
-  
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     link: '',
-    category: 'General'
+    hashtagsExtra: '',
   });
-
+  const [imageUrl, setImageUrl] = useState('');
+  const [uploading, setUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showAddCategory, setShowAddCategory] = useState(false);
-  const [newCategory, setNewCategory] = useState('');
-  const [managingCategories, setManagingCategories] = useState(false);
-
-  const defaultCategories = ['DSA', 'System Design', 'Web Dev', 'React', 'JavaScript', 'Other'];
-  const customCategories = user?.customCategories || [];
-  const allCategories = [...defaultCategories, ...customCategories];
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleAddCategory = async () => {
-      if (!newCategory.trim()) {
-        notify({ type: 'error', message: 'Please enter a category name.' });
-        return;
-      }
-  
-      try {
-        await dispatch(addCustomCategory(newCategory.trim())).unwrap();
-        setNewCategory('');
-        setShowAddCategory(false);
-        notify({ type: 'success', message: 'Category added successfully.' });
-      } catch (error) {
-        notify({ type: 'error', message: error || 'Failed to add category.' });
-      }
-    };
-  
-    const handleDeleteCategory = async (category) => {
-      if (window.confirm(`Delete category "${category}"?`)) {
-        try {
-        await dispatch(deleteCustomCategory(category)).unwrap();
-        if (formData.category === category) {
-          setFormData({ ...formData, category: 'DSA' });
-        }
-        notify({ type: 'success', message: 'Category deleted successfully.' });
-      } catch (error) {
-        notify({ type: 'error', message: error || 'Failed to delete category.' });
-      }
+  const handleImage = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${uploadsOrigin()}/api/uploads`, {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: fd,
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || 'Upload failed');
+      setImageUrl(data.url);
+      notify({ type: 'success', message: 'Image attached.' });
+    } catch (err) {
+      notify({ type: 'error', message: err?.message || 'Upload failed' });
+    } finally {
+      setUploading(false);
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!formData.title.trim() || !formData.description.trim()) {
       notify({ type: 'error', message: 'Title and description are required.' });
       return;
     }
 
+    const hashtags = collectHashtags(
+      formData.title,
+      formData.description,
+      formData.hashtagsExtra
+    );
+
     setIsSubmitting(true);
-    
+
     try {
-      await dispatch(createActivity(formData)).unwrap();
-      dispatch(getAllActivities());
-      notify({ type: 'success', message: 'Activity posted successfully.' });
+      await dispatch(
+        createActivity({
+          title: formData.title.trim(),
+          description: formData.description.trim(),
+          link: formData.link.trim(),
+          category: 'General',
+          hashtags,
+          imageUrl: imageUrl || '',
+        })
+      ).unwrap();
+      await dispatch(getCurrentUser()).unwrap();
+      onXPGained?.(XP_ACTIVITY_POST);
+      notify({ type: 'success', message: 'Activity posted.' });
       onClose();
     } catch (error) {
-      notify({ type: 'error', message: `Error posting activity: ${error}` });
+      notify({ type: 'error', message: error || 'Could not post activity' });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content post-activity-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2>Post What You Did</h2>
-          <button className="modal-close" onClick={onClose}>×</button>
+    <div className="modal-overlay pa-overlay" onClick={onClose}>
+      <div className="modal-content post-activity-modal pa-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header pa-head">
+          <h2>Post activity</h2>
+          <button type="button" className="modal-close" onClick={onClose} aria-label="Close">
+            ×
+          </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="post-activity-form">
+        <form onSubmit={handleSubmit} className="post-activity-form pa-form">
           <div className="form-group">
-            <label htmlFor="title">Title *</label>
+            <label htmlFor="pa-title">Title *</label>
             <input
               type="text"
-              id="title"
+              id="pa-title"
               name="title"
               value={formData.title}
               onChange={handleChange}
-              placeholder="e.g., Completed 100 LeetCode Problems!"
+              placeholder="What did you do?"
               required
             />
           </div>
 
-          {/* <div className="form-group">
-            <label htmlFor="category">Category *</label>
-            <select
-              id="category"
-              name="category"
-              value={formData.category}
+          <div className="form-group">
+            <label htmlFor="pa-desc">Caption *</label>
+            <textarea
+              id="pa-desc"
+              name="description"
+              value={formData.description}
               onChange={handleChange}
+              placeholder="Tell the story. Use #hashtags in text or add them below."
+              rows={5}
               required
-            >
-              {categories.map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
-          </div> */}
+            />
+          </div>
 
           <div className="form-group">
-            <label htmlFor="category">Category *</label>
-            <div className="category-controls">
-              <select
-                id="category"
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
-                required
-              >
-                {allCategories.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
-              <button 
-                type="button" 
-                className="manage-categories-btn"
-                onClick={() => setManagingCategories(!managingCategories)}
-              >
-                ⚙️ Manage
-              </button>
-            </div>
+            <label htmlFor="pa-tags">Hashtags (optional)</label>
+            <input
+              type="text"
+              id="pa-tags"
+              name="hashtagsExtra"
+              value={formData.hashtagsExtra}
+              onChange={handleChange}
+              placeholder="leetcode, dailygrind (comma or space — # optional)"
+            />
+            <p className="pa-hint">These merge with any #tags in your title or caption for search.</p>
+          </div>
 
-            {managingCategories && (
-              <div className="category-manager">
-                <h4>Your Custom Categories</h4>
-                {customCategories.length === 0 ? (
-                  <p className="no-categories">No custom categories yet</p>
-                ) : (
-                  <div className="custom-category-list">
-                    {customCategories.map(cat => (
-                      <div key={cat} className="custom-category-item">
-                        <span>{cat}</span>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteCategory(cat)}
-                          className="delete-category-btn"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                
-                {!showAddCategory ? (
-                  <button
-                    type="button"
-                    className="add-category-toggle-btn"
-                    onClick={() => setShowAddCategory(true)}
-                  >
-                    + Add New Category
-                  </button>
-                ) : (
-                  <div className="add-category-form">
-                    <input
-                      type="text"
-                      value={newCategory}
-                      onChange={(e) => setNewCategory(e.target.value)}
-                      placeholder="Category name"
-                      maxLength="30"
-                    />
-                    <button type="button" onClick={handleAddCategory}>Add</button>
-                    <button type="button" onClick={() => { setShowAddCategory(false); setNewCategory(''); }}>Cancel</button>
-                  </div>
-                )}
-              </div>
+          <div className="form-group">
+            <label>Photo (optional)</label>
+            <label className="pa-file-pick">
+              <input type="file" accept="image/*" disabled={uploading} onChange={handleImage} />
+              <span>{uploading ? 'Uploading…' : imageUrl ? 'Replace image' : 'Choose image'}</span>
+            </label>
+            {imageUrl && (
+              <button type="button" className="pa-remove-img" onClick={() => setImageUrl('')}>
+                Remove image
+              </button>
             )}
           </div>
 
           <div className="form-group">
-            <label htmlFor="description">What did you accomplish? *</label>
-            <textarea
-              id="description"
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              placeholder="Describe what you did, what you learned, or any insights..."
-              rows="5"
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="link">Link (Optional)</label>
+            <label htmlFor="pa-link">Link (optional)</label>
             <input
               type="url"
-              id="link"
+              id="pa-link"
               name="link"
               value={formData.link}
               onChange={handleChange}
-              placeholder="https://github.com/yourproject or any reference link"
+              placeholder="https://…"
             />
           </div>
 
-          <div className="form-info">
-            <p>🎉 Share your achievements with everyone!</p>
-            <p className="info-subtitle">Others can mark if they've done this too</p>
-          </div>
-
-          <div className="form-actions">
+          <div className="form-actions pa-actions">
             <button type="button" className="cancel-btn" onClick={onClose}>
               Cancel
             </button>
-            <button type="submit" className="submit-btn" disabled={isSubmitting}>
-              {isSubmitting ? 'Posting...' : 'Post Activity'}
+            <button type="submit" className="submit-btn" disabled={isSubmitting || uploading}>
+              {isSubmitting ? 'Posting…' : 'Post'}
             </button>
           </div>
         </form>

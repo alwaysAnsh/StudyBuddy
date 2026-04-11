@@ -14,6 +14,13 @@ import Signup from './components/Signup';
 import UserSearch from './components/UserSearch';
 import Buddies from './components/Buddies';
 import ForgotPassword from './components/ForgotPassword';
+import ToastHost from './components/ToastHost';
+import StudyRooms from './components/StudyRooms';
+import StudyRoomDetail from './components/StudyRoomDetail';
+import Notifications from './components/Notifications';
+import NotificationPoller from './components/NotificationPoller';
+import PublicActivity from './components/PublicActivity';
+import { ConfirmProvider } from './context/ConfirmContext';
 
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated } = useSelector((state) => state.auth);
@@ -23,7 +30,10 @@ const PrivateRoute = ({ children }) => {
 function App() {
   return (
     <Router>
-      <Routes>
+      <ConfirmProvider>
+        <NotificationPoller />
+        <ToastHost />
+        <Routes>
         {/* Public routes with Layout */}
         <Route path="/" element={<Layout><HomePage /></Layout>} />
         <Route path="/about" element={<Layout><AboutPage /></Layout>} />
@@ -33,7 +43,8 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-        
+        <Route path="/p/:code" element={<PublicActivity />} />
+
         {/* Protected routes */}
         <Route
           path="/dashboard"
@@ -54,6 +65,30 @@ function App() {
           }
         />
         <Route
+          path="/study-rooms"
+          element={
+            <PrivateRoute>
+              <StudyRooms />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/study-rooms/:groupId"
+          element={
+            <PrivateRoute>
+              <StudyRoomDetail />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/notifications"
+          element={
+            <PrivateRoute>
+              <Notifications />
+            </PrivateRoute>
+          }
+        />
+        <Route
           path="/profile/:username"
           element={
             <PrivateRoute>
@@ -64,7 +99,8 @@ function App() {
         
         {/* Catch all */}
         <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
+        </Routes>
+      </ConfirmProvider>
     </Router>
   );
 }

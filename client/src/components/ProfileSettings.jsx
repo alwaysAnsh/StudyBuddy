@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateUserProfile, changePassword } from '../redux/slices/authSlice';
 import './ProfileSettings.css';
-import { notify } from './notify';
+import { notify } from '../utils/notify';
+import { resolveUserAvatarUrl } from '../utils/avatarUrl';
 
 const ProfileSettings = ({ onClose }) => {
   const dispatch = useDispatch();
@@ -18,10 +19,6 @@ const ProfileSettings = ({ onClose }) => {
   const [isUpdating, setIsUpdating] = useState(false);
 
   const avatars = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10,11,12,13,14,15,16,17,18,19];
-
-  const getAvatarUrl = (avatarNum) => {
-    return `/avatars/avatar-${avatarNum}.png`;
-  };
 
   // const handleProfileUpdate = async (e) => {
   //   e.preventDefault();
@@ -171,7 +168,7 @@ const ProfileSettings = ({ onClose }) => {
                     onClick={() => setSelectedAvatar(avatarNum)}
                   >
                     <img
-                      src={getAvatarUrl(avatarNum)}
+                      src={resolveUserAvatarUrl({ avatar: avatarNum, name: user?.name })}
                       alt={`Avatar ${avatarNum}`}
                       onError={(e) => {
                         e.target.src = `https://ui-avatars.com/api/?name=Avatar${avatarNum}&background=4f46e5&color=fff&size=80`;

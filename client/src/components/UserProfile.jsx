@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import axiosInstance from '../config/axios';
+import { resolveUserAvatarUrl, uiAvatarsFallback } from '../utils/avatarUrl';
 import './UserProfile.css';
 
 const UserProfile = () => {
@@ -43,10 +44,6 @@ const UserProfile = () => {
 
   if (!user) return null;
 
-  const getAvatarUrl = (avatarNum) => {
-    return `/avatars/avatar-${avatarNum}.png`;
-  };
-
   return (
     <div className="profile-page">
       <div className="profile-container">
@@ -54,10 +51,10 @@ const UserProfile = () => {
         <div className="profile-header">
           <div className="profile-avatar-large">
             <img 
-              src={getAvatarUrl(user.avatar)} 
+              src={resolveUserAvatarUrl(user)} 
               alt={user.name}
               onError={(e) => {
-                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=667eea&color=fff&size=200`;
+                e.target.src = uiAvatarsFallback(user.name, 200);
               }}
             />
           </div>

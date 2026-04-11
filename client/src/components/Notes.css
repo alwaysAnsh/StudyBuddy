@@ -46,6 +46,10 @@
   margin-bottom: 2rem;
 }
 
+.notes-categories-heading-pro {
+  margin-bottom: 0.75rem;
+}
+
 .filter-label-pro {
   display: block;
   font-size: 0.8rem;
@@ -96,6 +100,8 @@
   border-radius: 18px;
   padding: 1.5rem;
   box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+  min-width: 0;
+  overflow: hidden;
 }
 
 .category-title-notes {
@@ -107,27 +113,13 @@
   border-bottom: 1px solid rgba(15, 23, 42, 0.08);
 }
 
-.notes-horizontal-scroll {
-  display: flex;
+.notes-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
   gap: 1.25rem;
-  overflow-x: auto;
   padding: 0.5rem 0;
-  scrollbar-width: thin;
-  scrollbar-color: #cbd5e1 #f1f5f9;
-}
-
-.notes-horizontal-scroll::-webkit-scrollbar {
-  height: 8px;
-}
-
-.notes-horizontal-scroll::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 10px;
-}
-
-.notes-horizontal-scroll::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 10px;
+  width: 100%;
+  min-width: 0;
 }
 
 .note-modal-overlay {
@@ -245,13 +237,7 @@
   }
 
   .category-pills-notes {
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    scrollbar-width: none;
-  }
-
-  .category-pills-notes::-webkit-scrollbar {
-    display: none;
+    flex-wrap: wrap;
   }
 
   .note-modal-overlay {
@@ -272,15 +258,15 @@
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 440px) {
   .notes-header-content-pro h2 {
     font-size: 1.4rem;
   }
 
-  .category-pill-note {
+  /* .category-pill-note {
     font-size: 0.8rem;
     padding: 0.45rem 0.9rem;
-  }
+  } */
 
   .note-modal-content {
     padding: 1.25rem;
@@ -288,5 +274,10 @@
 
   .note-modal-title {
     font-size: 1.2rem;
+  }
+  .create-note-btn-pro{
+    padding: 0.65rem 1.1rem;
+    font-size: 0.85rem;
+    width: auto;
   }
 }

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { createActivity, getAllActivities } from '../redux/slices/activitySlice';
+import { createActivity, getActivitiesPage } from '../redux/slices/activitySlice';
 import './CreateActivity.css';
-import { notify } from './notify';
+import { notify } from '../utils/notify';
 
 const CreateActivity = ({ onClose }) => {
   const dispatch = useDispatch();
@@ -40,7 +40,7 @@ const CreateActivity = ({ onClose }) => {
     
     try {
       await dispatch(createActivity(formData)).unwrap();
-      dispatch(getAllActivities());
+      dispatch(getActivitiesPage({ skip: 0, append: false }));
       notify({ type: 'success', message: 'Activity posted successfully.' });
       onClose();
     } catch (error) {

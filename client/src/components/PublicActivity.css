@@ -1,0 +1,97 @@
+.public-activity-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #f0fdfa 0%, #f8fafc 40%, #fff 100%);
+  font-family: 'Sora', system-ui, -apple-system, sans-serif;
+}
+
+.public-activity-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.public-activity-brand {
+  font-weight: 800;
+  font-size: 1.05rem;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+  background: linear-gradient(135deg, #059669 0%, #0ea5e9 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.public-activity-signin {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #0ea5e9;
+  text-decoration: none;
+}
+
+.public-activity-signin:hover {
+  text-decoration: underline;
+}
+
+.public-activity-main {
+  padding: 1rem 0.75rem 2rem;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.public-activity-footnote {
+  text-align: center;
+  font-size: 0.78rem;
+  color: #94a3b8;
+  margin: 1rem 0 0;
+  line-height: 1.5;
+}
+
+.public-activity-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.25rem;
+  gap: 1rem;
+}
+
+.public-activity-msg {
+  font-size: 1rem;
+  color: #334155;
+  margin: 0;
+}
+
+.public-activity-msg.muted {
+  color: #94a3b8;
+}
+
+.public-activity-home-link {
+  font-weight: 600;
+  color: #0ea5e9;
+  text-decoration: none;
+}
+
+.public-activity-home-link:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 425px) {
+  .public-activity-top {
+    padding: 0.65rem 0.75rem;
+  }
+
+  .public-activity-brand {
+    font-size: 0.95rem;
+  }
+
+  .public-activity-main {
+    padding: 0.65rem 0.5rem 1.5rem;
+  }
+}

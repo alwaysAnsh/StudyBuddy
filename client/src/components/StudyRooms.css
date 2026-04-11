@@ -1,0 +1,229 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap');
+
+.study-rooms-page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 4rem;
+  min-height: 100vh;
+  background: #f7fafc;
+  font-family: 'Sora', system-ui, -apple-system, sans-serif;
+  color: #0b1220;
+}
+
+.study-rooms-hero {
+  margin-bottom: 2rem;
+}
+
+.study-rooms-hero h1 {
+  font-size: 1.75rem;
+  margin: 0 0 0.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #0b1220;
+}
+
+.study-rooms-hero p {
+  margin: 0;
+  color: #6b7280;
+  line-height: 1.55;
+  max-width: 52rem;
+  font-size: 0.95rem;
+}
+
+.study-rooms-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.study-rooms-btn {
+  padding: 0.6rem 1.15rem;
+  border-radius: 12px;
+  border: 1px solid #d4dee9;
+  background: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  color: #334155;
+  font-family: inherit;
+  font-size: 0.9rem;
+  transition: background 0.2s, border-color 0.2s, transform 0.15s;
+}
+
+.study-rooms-btn:hover {
+  background: #f8fafc;
+  border-color: #a9b7c9;
+}
+
+.study-rooms-btn.primary {
+  background: linear-gradient(135deg, #34d399 0%, #22d3ee 50%, #38bdf8 100%);
+  color: #0b1220;
+  border-color: transparent;
+  box-shadow: 0 10px 22px rgba(56, 189, 248, 0.28);
+}
+
+.study-rooms-btn.primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 26px rgba(56, 189, 248, 0.32);
+}
+
+.study-rooms-invites {
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 16px;
+  padding: 1.15rem 1.35rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+}
+
+.study-rooms-invites h2 {
+  font-size: 1rem;
+  margin: 0 0 0.85rem;
+  font-weight: 700;
+  color: #0b1220;
+}
+
+.invite-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  font-size: 0.92rem;
+}
+
+.invite-row:last-child {
+  border-bottom: none;
+}
+
+.room-card {
+  display: block;
+  padding: 1.15rem 1.35rem;
+  border-radius: 16px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #fff;
+  text-decoration: none;
+  color: inherit;
+  margin-bottom: 0.75rem;
+  transition: box-shadow 0.2s, border-color 0.2s;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.05);
+}
+
+.room-card:hover {
+  border-color: rgba(34, 211, 238, 0.45);
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.08);
+}
+
+.room-card h3 {
+  margin: 0 0 0.4rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0b1220;
+}
+
+.room-card-meta {
+  font-size: 0.86rem;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+/* Create room modal — aligned with dashboard / ConfirmModal */
+.modal-overlay.sr-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 2rem 1rem;
+  z-index: 8000;
+  overflow-y: auto;
+  backdrop-filter: blur(6px);
+}
+
+.sr-modal-content {
+  background: #fff;
+  border-radius: 18px;
+  max-width: 480px;
+  width: 100%;
+  padding: 1.6rem 1.75rem;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  margin-top: 0.5rem;
+}
+
+.sr-modal-content h2 {
+  margin: 0 0 1.1rem;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #0b1220;
+  letter-spacing: -0.02em;
+}
+
+.sr-form-group {
+  margin-bottom: 1rem;
+}
+
+.sr-form-group label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+  margin-bottom: 0.4rem;
+}
+
+.sr-form-group input,
+.sr-form-group select,
+.sr-form-group textarea {
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  border-radius: 12px;
+  border: 1px solid #d4dee9;
+  font-size: 0.92rem;
+  font-family: inherit;
+  background: #f8fafc;
+  color: #0b1220;
+}
+
+.sr-form-group input:focus,
+.sr-form-group select:focus,
+.sr-form-group textarea:focus {
+  outline: none;
+  border-color: #22d3ee;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.2);
+}
+
+.sr-form-hint {
+  margin: 0.35rem 0 0;
+  font-size: 0.82rem;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+.sr-form-actions {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: flex-end;
+  margin-top: 1.35rem;
+  flex-wrap: wrap;
+}
+
+.study-rooms-loading {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+.empty-rooms {
+  text-align: center;
+  padding: 2rem;
+  color: #64748b;
+  border: 1px dashed #cbd5e1;
+  border-radius: 16px;
+  background: #fff;
+  font-size: 0.95rem;
+}

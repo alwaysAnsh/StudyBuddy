@@ -3,8 +3,32 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import dotenv from 'dotenv'
+import dotenv from 'dotenv';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+import multer from 'multer';
+import { attachStudyRoomRoutes } from './studyRooms.js';
+import { notifyUser, attachNotificationRoutes } from './notifications.js';
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+const uploadStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, uploadDir),
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname || '').slice(0, 12);
+    cb(null, `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`);
+  },
+});
+const upload = multer({
+  storage: uploadStorage,
+  limits: { fileSize: 8 * 1024 * 1024 },
+});
 
 const app = express();
 
@@ -177,7 +201,8 @@ const userSchema = new mongoose.Schema({
     // NEW STATS
     totalTasksCompletedOnce: { type: Number, default: 0 }, // Unique completions
     totalXpEarned: { type: Number, default: 0 }, // Lifetime XP
-    highestLevel: { type: Number, default: 1 } // Peak level achieved
+    highestLevel: { type: Number, default: 1 }, // Peak level achieved
+    studyRoomTaskCompletions: { type: Number, default: 0 }
   },
   customCategories: [{ type: String }],
   createdAt: { 
@@ -318,36 +343,117 @@ const Note = mongoose.model('Note', noteSchema);
 
 // Activity Schema
 const activitySchema = new mongoose.Schema({
-  title: { 
-    type: String, 
-    required: true 
+  title: {
+    type: String,
+    required: true,
   },
-  description: { 
-    type: String, 
-    required: true 
+  description: {
+    type: String,
+    required: true,
   },
-  link: { 
-    type: String, 
-    default: '' 
+  link: {
+    type: String,
+    default: '',
   },
-  category: { 
-    type: String, 
-    default: 'General'
+  category: {
+    type: String,
+    default: 'General',
   },
-  createdBy: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'User', 
-    required: true 
+  hashtags: {
+    type: [String],
+    default: [],
   },
-  completedBy: [{ 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'User' 
-  }],
-  createdAt: { 
-    type: Date, 
-    default: Date.now 
-  }
+  imageUrl: {
+    type: String,
+    default: '',
+  },
+  /** Short id for public share URL (e.g. /p/:shareCode) */
+  shareCode: {
+    type: String,
+    default: null,
+    sparse: true,
+    index: true,
+  },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
+  /** Legacy "I did this too" — merged into supportedBy in API responses */
+  completedBy: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
+  ],
+  supportedBy: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
+  ],
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
+
+function normalizeActivityResponse(doc) {
+  const o = doc.toObject ? doc.toObject() : { ...doc };
+  const s = o.supportedBy || [];
+  const c = o.completedBy || [];
+  const byId = new Map();
+  [...s, ...c].forEach((u) => {
+    if (u && u._id) byId.set(String(u._id), u);
+  });
+  const { completedBy: _drop, ...rest } = o;
+  return {
+    ...rest,
+    supportedBy: [...byId.values()],
+  };
+}
+
+async function generateUniqueActivityShareCode() {
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    let code = '';
+    for (let i = 0; i < 9; i += 1) {
+      code += chars[Math.floor(Math.random() * chars.length)];
+    }
+    // eslint-disable-next-line no-await-in-loop
+    const exists = await Activity.exists({ shareCode: code });
+    if (!exists) return code;
+  }
+  return `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+}
+
+function normalizeHashtagInput(tags) {
+  if (!Array.isArray(tags)) return [];
+  const out = new Set();
+  for (const raw of tags) {
+    const t = String(raw || '')
+      .trim()
+      .replace(/^#+/, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9_]/g, '');
+    if (t.length >= 2 && t.length <= 40) out.add(t);
+  }
+  return [...out].slice(0, 20);
+}
+
+function escapeRegexForActivitySearch(s) {
+  return String(s || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/** Parse `tags` query (comma / whitespace) into normalized search tokens */
+function parseActivityTagsQueryParam(raw) {
+  if (!raw || typeof raw !== 'string') return [];
+  return raw
+    .split(/[\s,]+/)
+    .map((t) => t.replace(/^#+/, '').trim().toLowerCase().replace(/[^a-z0-9_]/g, ''))
+    .filter((t) => t.length > 0)
+    .slice(0, 10);
+}
 
 const Activity = mongoose.model('Activity', activitySchema);
 
@@ -768,6 +874,15 @@ app.post('/api/buddies/request/:userId', authenticateToken, async (req, res) => 
 
     await buddyRequest.save();
 
+    await notifyUser({
+      recipientId: receiverId,
+      scope: 'buddies',
+      type: 'buddy_request',
+      title: 'New buddy request',
+      body: `${sender.name} (@${sender.username}) sent you a buddy request.`,
+      link: '/buddies',
+    });
+
     const populatedRequest = await BuddyRequest.findById(buddyRequest._id)
       .populate('sender', 'username name avatar')
       .populate('receiver', 'username name avatar');
@@ -848,6 +963,16 @@ app.patch('/api/buddies/requests/:requestId/accept', authenticateToken, async (r
       $addToSet: { buddies: request.sender }
     });
 
+    const receiverUser = await User.findById(request.receiver).select('name username');
+    await notifyUser({
+      recipientId: request.sender,
+      scope: 'buddies',
+      type: 'buddy_accepted',
+      title: 'Buddy request accepted',
+      body: `${receiverUser?.name || 'Someone'} (@${receiverUser?.username || 'user'}) accepted your buddy request.`,
+      link: '/buddies',
+    });
+
     console.log('✅ Buddy request accepted');
     res.json({ message: 'Buddy request accepted' });
   } catch (error) {
@@ -885,6 +1010,16 @@ app.patch('/api/buddies/requests/:requestId/reject', authenticateToken, async (r
 if (!updatedRequest) {
   return res.status(400).json({ message: 'Request not found or already handled' });
 }
+
+    const receiverUser = await User.findById(req.user.id).select('name username');
+    await notifyUser({
+      recipientId: updatedRequest.sender,
+      scope: 'buddies',
+      type: 'buddy_declined',
+      title: 'Buddy request declined',
+      body: `${receiverUser?.name || 'Someone'} declined your buddy request.`,
+      link: '/buddies',
+    });
 
     console.log('✅ Buddy request rejected');
     res.json({ message: 'Buddy request rejected' });
@@ -1006,17 +1141,17 @@ app.patch('/api/users/profile', authenticateToken, async (req, res) => {
   }
 });
 
-// Get all unique categories from all users
+// Current user's custom categories only (defaults live on the client)
 app.get('/api/users/all-categories', authenticateToken, async (req, res) => {
   try {
-    const users = await User.find({}, 'customCategories');
-    const allCategories = new Set();
-    
-    users.forEach(user => {
-      user.customCategories.forEach(cat => allCategories.add(cat));
-    });
-    
-    res.json({ categories: Array.from(allCategories).sort() });
+    const user = await User.findById(req.user.id).select('customCategories');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    const categories = [...(user.customCategories || [])].sort((a, b) =>
+      String(a).localeCompare(String(b), undefined, { sensitivity: 'base' })
+    );
+    res.json({ categories });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }
@@ -1141,6 +1276,16 @@ app.post('/api/tasks', authenticateToken, async (req, res) => {
     const populatedTask = await Task.findById(task._id)
       .populate('assignedBy', 'username name')
       .populate('assignedTo', 'username name');
+
+    await notifyUser({
+      recipientId: assignedTo,
+      scope: 'my_tasks',
+      type: 'task_assigned',
+      title: 'New task assigned to you',
+      body: `${user.name} assigned you: "${title}"`,
+      link: '/dashboard',
+      meta: { taskId: task._id.toString() },
+    });
     
     console.log('✅ Task created:', task.title);
     res.status(201).json(populatedTask);
@@ -1201,15 +1346,16 @@ app.patch('/api/tasks/:id', authenticateToken, async (req, res) => {
     const previousStatus = task.status;
     const newStatus = status || task.status;
 
+    const isNowCompleted = newStatus === 'completed';
+    const willAwardFirstCompletionXp =
+      isNowCompleted && previousStatus !== 'completed' && !task.xpAwarded;
+
     // Update task
     if (status) task.status = status;
     if (notes !== undefined) task.notes = notes;
 
     // XP LOGIC - Award XP only once when task is marked completed for the first time
-    const isNowCompleted = newStatus === 'completed';
-    const wasNotCompleted = previousStatus !== 'completed';
-    
-    if (isNowCompleted && !task.xpAwarded) {
+    if (willAwardFirstCompletionXp) {
       // First time completing this task - Award XP
       const user = await User.findById(req.user.id).session(session);
       
@@ -1242,12 +1388,26 @@ app.patch('/api/tasks/:id', authenticateToken, async (req, res) => {
       .populate('assignedBy', 'username name')
       .populate('assignedTo', 'username name');
     
-    // Return task with XP info
+    // Return task with XP info (use willAwardFirstCompletionXp; task.xpAwarded is already true after save)
     const response = {
       ...updatedTask.toObject(),
-      xpEarned: (!task.xpAwarded && isNowCompleted) ? 10 : 0,
-      isFirstCompletion: !task.xpAwarded && isNowCompleted
+      xpEarned: willAwardFirstCompletionXp ? 10 : 0,
+      isFirstCompletion: willAwardFirstCompletionXp
     };
+
+    const assignerId = task.assignedBy.toString();
+    if (assignerId !== req.user.id) {
+      const assignee = await User.findById(req.user.id).select('name username');
+      await notifyUser({
+        recipientId: assignerId,
+        scope: 'assigned_by_me',
+        type: 'task_updated',
+        title: 'Task progress updated',
+        body: `${assignee?.name || 'Buddy'} updated "${task.title}" → ${updatedTask.status}`,
+        link: '/dashboard',
+        meta: { taskId: task._id.toString() },
+      });
+    }
 
     res.json(response);
   } catch (error) {
@@ -1321,6 +1481,18 @@ app.post('/api/notes', authenticateToken, async (req, res) => {
     const populatedNote = await Note.findById(note._id)
       .populate('createdBy', 'username name');
     
+    const withBuddies = await User.findById(req.user.id).populate('buddies', '_id name');
+    for (const b of withBuddies.buddies || []) {
+      await notifyUser({
+        recipientId: b._id,
+        scope: 'notes',
+        type: 'shared_note',
+        title: 'New shared note',
+        body: `${user.name} posted: ${title}`,
+        link: '/dashboard',
+      });
+    }
+
     console.log('✅ Note created:', note.title);
     res.status(201).json(populatedNote);
   } catch (error) {
@@ -1386,32 +1558,95 @@ app.delete('/api/notes/:id', authenticateToken, async (req, res) => {
 
 app.get('/api/activities', authenticateToken, async (req, res) => {
   try {
-    const activities = await Activity.find()
-      .populate('createdBy', 'username name')
-      .populate('completedBy', 'username name')
-      .sort({ createdAt: -1 });
-    res.json(activities);
+    const limit = Math.min(Math.max(parseInt(String(req.query.limit), 10) || 15, 1), 40);
+    const skip = Math.max(parseInt(String(req.query.skip), 10) || 0, 0);
+    const tagTerms = parseActivityTagsQueryParam(req.query.tags);
+
+    const filter = {};
+    if (tagTerms.length > 0) {
+      filter.$and = tagTerms.map((term) => ({
+        hashtags: { $regex: escapeRegexForActivitySearch(term), $options: 'i' },
+      }));
+    }
+
+    const activities = await Activity.find(filter)
+      .populate('createdBy', 'username name avatar')
+      .populate('completedBy', 'username name avatar')
+      .populate('supportedBy', 'username name avatar')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit + 1);
+
+    const hasMore = activities.length > limit;
+    const slice = hasMore ? activities.slice(0, limit) : activities;
+    res.json({
+      items: slice.map((a) => normalizeActivityResponse(a)),
+      hasMore,
+    });
   } catch (error) {
     console.error('❌ Get activities error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
+app.get('/api/public/activities/:code', async (req, res) => {
+  try {
+    const { code } = req.params;
+    let activity;
+    if (code.length === 24 && /^[a-f0-9]{24}$/i.test(code)) {
+      activity = await Activity.findById(code);
+    } else {
+      activity = await Activity.findOne({ shareCode: code });
+    }
+    if (!activity) {
+      return res.status(404).json({ message: 'Activity not found' });
+    }
+    const populated = await Activity.findById(activity._id)
+      .populate('createdBy', 'username name avatar')
+      .populate('completedBy', 'username name avatar')
+      .populate('supportedBy', 'username name avatar');
+    res.json(normalizeActivityResponse(populated));
+  } catch (error) {
+    console.error('❌ Public activity error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 app.post('/api/activities', authenticateToken, async (req, res) => {
   try {
-    const { title, description, link, category } = req.body;
-    
+    const { title, description, link, category, hashtags, imageUrl } = req.body;
+
     if (!title || !description) {
       return res.status(400).json({ message: 'Title and description are required' });
     }
+
+    const fromBody = Array.isArray(hashtags)
+      ? hashtags
+      : typeof hashtags === 'string'
+        ? hashtags.split(/[\s,]+/)
+        : [];
+    const fromText = [];
+    const tagRe = /#([a-zA-Z0-9_]{2,40})/g;
+    let tm;
+    const scan = `${title} ${description}`;
+    while ((tm = tagRe.exec(scan)) !== null) {
+      fromText.push(tm[1]);
+    }
+    const tagList = normalizeHashtagInput([...fromBody, ...fromText]);
+
+    const shareCode = await generateUniqueActivityShareCode();
 
     const activity = new Activity({
       title,
       description,
       link: link || '',
       category: category || 'General',
+      hashtags: tagList,
+      imageUrl: imageUrl ? String(imageUrl).slice(0, 500) : '',
+      shareCode,
       createdBy: req.user.id,
-      completedBy: [req.user.id]
+      supportedBy: [],
+      completedBy: [],
     });
 
     await activity.save();
@@ -1422,18 +1657,31 @@ app.post('/api/activities', authenticateToken, async (req, res) => {
     await user.save();
 
     const populatedActivity = await Activity.findById(activity._id)
-      .populate('createdBy', 'username name')
-      .populate('completedBy', 'username name');
+      .populate('createdBy', 'username name avatar')
+      .populate('completedBy', 'username name avatar')
+      .populate('supportedBy', 'username name avatar');
     
+    const withBuddies = await User.findById(req.user.id).populate('buddies', '_id name');
+    for (const b of withBuddies.buddies || []) {
+      await notifyUser({
+        recipientId: b._id,
+        scope: 'activity',
+        type: 'activity_posted',
+        title: 'New activity',
+        body: `${user.name} shared an activity: ${title}`,
+        link: '/dashboard',
+      });
+    }
+
     console.log('✅ Activity created:', activity.title);
-    res.status(201).json(populatedActivity);
+    res.status(201).json(normalizeActivityResponse(populatedActivity));
   } catch (error) {
     console.error('❌ Create activity error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
-app.patch('/api/activities/:id/toggle-completion', authenticateToken, async (req, res) => {
+app.patch('/api/activities/:id/support', authenticateToken, async (req, res) => {
   try {
     const activity = await Activity.findById(req.params.id);
 
@@ -1442,23 +1690,45 @@ app.patch('/api/activities/:id/toggle-completion', authenticateToken, async (req
     }
 
     const userId = req.user.id;
-    const hasCompleted = activity.completedBy.includes(userId);
+    const arr = activity.supportedBy || [];
+    const has = arr.some((id) => id.toString() === userId);
 
-    if (hasCompleted) {
-      activity.completedBy = activity.completedBy.filter(id => id.toString() !== userId);
+    if (has) {
+      activity.supportedBy = arr.filter((id) => id.toString() !== userId);
     } else {
-      activity.completedBy.push(userId);
+      activity.supportedBy = [...arr, userId];
     }
 
     await activity.save();
+
+    if (!has && activity.createdBy.toString() !== userId) {
+      const supporter = await User.findById(userId);
+      if (supporter) {
+        supporter.xp += 3;
+        await supporter.save();
+      }
+    }
+
     const updatedActivity = await Activity.findById(activity._id)
-      .populate('createdBy', 'username name')
-      .populate('completedBy', 'username name');
-    
-    console.log(`✅ Activity completion toggled: ${hasCompleted ? 'removed' : 'added'}`);
-    res.json(updatedActivity);
+      .populate('createdBy', 'username name avatar')
+      .populate('completedBy', 'username name avatar')
+      .populate('supportedBy', 'username name avatar');
+
+    if (!has && activity.createdBy.toString() !== userId) {
+      const actor = await User.findById(userId).select('name username');
+      await notifyUser({
+        recipientId: activity.createdBy,
+        scope: 'activity',
+        type: 'activity_supported',
+        title: 'Someone supported your activity',
+        body: `${actor?.name || 'A buddy'} sent support on "${activity.title}"`,
+        link: '/dashboard',
+      });
+    }
+
+    res.json(normalizeActivityResponse(updatedActivity));
   } catch (error) {
-    console.error('❌ Toggle completion error:', error);
+    console.error('❌ Toggle support error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -1753,6 +2023,24 @@ app.post('/api/auth/change-password', authenticateToken, async (req, res) => {
   }
 });
 
+
+// File uploads (notes / study room resources)
+app.post('/api/uploads', authenticateToken, upload.single('file'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ message: 'No file uploaded' });
+  }
+  res.json({
+    url: `/uploads/${req.file.filename}`,
+    originalName: req.file.originalname,
+  });
+});
+app.use('/uploads', express.static(uploadDir));
+
+// In-app notifications
+attachNotificationRoutes(app, { authenticateToken });
+
+// Study rooms (buddy-only groups, structured tasks, no chat)
+attachStudyRoomRoutes(app, { authenticateToken, User });
 
 // 404 handler
 app.use((req, res) => {

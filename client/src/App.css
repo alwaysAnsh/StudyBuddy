@@ -19,3 +19,16 @@ code {
 #root {
   min-height: 100vh;
 }
+
+/* Slightly smaller base type on small phones (improves density on 375–425px) */
+@media (max-width: 425px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 375px) {
+  html {
+    font-size: 13px;
+  }
+}

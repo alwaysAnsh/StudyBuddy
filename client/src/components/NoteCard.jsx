@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { deleteNote, updateNote } from '../redux/slices/noteSlice';
 import './NoteCard.css';
-import { notify } from './notify';
+import { notify } from '../utils/notify';
+import { useConfirm } from '../context/ConfirmContext';
 
 const NoteCard = ({ note, onViewFull }) => {
   const dispatch = useDispatch();
+  const { confirm } = useConfirm();
   const { user } = useSelector((state) => state.auth);
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(note.title);
@@ -15,11 +17,16 @@ const NoteCard = ({ note, onViewFull }) => {
   const categories = ['General', 'DSA', 'System Design', 'Web Dev', 'React', 'JavaScript', 'Other'];
   const isCreator = note.createdBy._id === user?._id;
 
-  const handleDelete = () => {
-    if (window.confirm('Are you sure you want to delete this note?')) {
-      dispatch(deleteNote(note._id));
-      notify({ type: 'success', message: 'Note deleted.' });
-    }
+  const handleDelete = async () => {
+    const ok = await confirm({
+      title: 'Delete this note?',
+      message: 'This cannot be undone.',
+      confirmLabel: 'Delete',
+      variant: 'danger',
+    });
+    if (!ok) return;
+    dispatch(deleteNote(note._id));
+    notify({ type: 'success', message: 'Note deleted.' });
   };
 
   const handleUpdate = () => {

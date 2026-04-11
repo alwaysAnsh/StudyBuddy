@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { createTask, getBuddies, getMyTasks, getAssignedByMe } from '../redux/slices/taskSlice';
-import { addCustomCategory, deleteCustomCategory } from '../redux/slices/authSlice';
+import { getCurrentUser, addCustomCategory, deleteCustomCategory } from '../redux/slices/authSlice';
 import './AssignTask.css';
 import { Link } from 'react-router-dom';
-import { notify } from './notify';
+import { notify } from '../utils/notify';
+import { useConfirm } from '../context/ConfirmContext';
 
-const AssignTask = ({ onClose }) => {
+const XP_TASK_ASSIGNED = 5;
+
+const AssignTask = ({ onClose, onXPGained }) => {
   const dispatch = useDispatch();
+  const { confirm } = useConfirm();
   const { buddies } = useSelector((state) => state.buddies);
   const { user } = useSelector((state) => state.auth);
   // console.log("buddies",buddies)
@@ -57,16 +61,21 @@ const AssignTask = ({ onClose }) => {
   };
 
   const handleDeleteCategory = async (category) => {
-    if (window.confirm(`Delete category "${category}"?`)) {
-      try {
-        await dispatch(deleteCustomCategory(category)).unwrap();
-        if (formData.category === category) {
-          setFormData({ ...formData, category: 'DSA' });
-        }
-        notify({ type: 'success', message: 'Category deleted successfully.' });
-      } catch (error) {
-        notify({ type: 'error', message: error || 'Failed to delete category.' });
+    const ok = await confirm({
+      title: 'Delete category?',
+      message: `Remove "${category}" from your custom categories?`,
+      confirmLabel: 'Delete',
+      variant: 'danger',
+    });
+    if (!ok) return;
+    try {
+      await dispatch(deleteCustomCategory(category)).unwrap();
+      if (formData.category === category) {
+        setFormData({ ...formData, category: 'DSA' });
       }
+      notify({ type: 'success', message: 'Category deleted successfully.' });
+    } catch (error) {
+      notify({ type: 'error', message: error || 'Failed to delete category.' });
     }
   };
 
@@ -84,10 +93,11 @@ const AssignTask = ({ onClose }) => {
       await dispatch(createTask(formData)).unwrap();
       dispatch(getMyTasks());
       dispatch(getAssignedByMe());
-      notify({ type: 'success', message: 'Task assigned successfully.' });
+      await dispatch(getCurrentUser()).unwrap();
+      onXPGained?.(XP_TASK_ASSIGNED);
       onClose();
-    } catch (error) {
-      notify({ type: 'error', message: `Error creating task: ${error}` });
+    } catch {
+      /* Error toast: global task listener middleware */
     } finally {
       setIsSubmitting(false);
     }

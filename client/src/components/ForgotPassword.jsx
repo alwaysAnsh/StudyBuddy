@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { notify } from '../utils/notify';
 import './ForgotPassword.css';
 
 // const API_URL = 'http://localhost:5050/api';
@@ -21,7 +22,7 @@ const ForgotPassword = () => {
     e.preventDefault();
     
     if (!username.trim()) {
-      alert('Please enter your username');
+      notify({ type: 'error', message: 'Please enter your username' });
       return;
     }
 
@@ -32,7 +33,7 @@ const ForgotPassword = () => {
       setSecurityQuestion(response.data.securityQuestion);
       setStep(2);
     } catch (error) {
-      alert(error.response?.data?.message || 'User not found');
+      notify({ type: 'error', message: error.response?.data?.message || 'User not found' });
     } finally {
       setIsLoading(false);
     }
@@ -42,7 +43,7 @@ const ForgotPassword = () => {
     e.preventDefault();
     
     if (!securityAnswer.trim()) {
-      alert('Please answer the security question');
+      notify({ type: 'error', message: 'Please answer the security question' });
       return;
     }
 
@@ -57,7 +58,7 @@ const ForgotPassword = () => {
       setResetToken(response.data.resetToken);
       setStep(3);
     } catch (error) {
-      alert(error.response?.data?.message || 'Incorrect security answer');
+      notify({ type: 'error', message: error.response?.data?.message || 'Incorrect security answer' });
     } finally {
       setIsLoading(false);
     }
@@ -67,17 +68,17 @@ const ForgotPassword = () => {
     e.preventDefault();
     
     if (!newPassword || !confirmPassword) {
-      alert('Please fill all password fields');
+      notify({ type: 'error', message: 'Please fill all password fields' });
       return;
     }
 
     if (newPassword.length < 6) {
-      alert('Password must be at least 6 characters');
+      notify({ type: 'error', message: 'Password must be at least 6 characters' });
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      alert('Passwords do not match');
+      notify({ type: 'error', message: 'Passwords do not match' });
       return;
     }
 
@@ -89,10 +90,10 @@ const ForgotPassword = () => {
         newPassword
       });
       
-      alert('Password reset successfully! You can now login with your new password.');
+      notify({ type: 'success', message: 'Password reset successfully! You can now log in with your new password.' });
       navigate('/login');
     } catch (error) {
-      alert(error.response?.data?.message || 'Failed to reset password');
+      notify({ type: 'error', message: error.response?.data?.message || 'Failed to reset password' });
     } finally {
       setIsLoading(false);
     }

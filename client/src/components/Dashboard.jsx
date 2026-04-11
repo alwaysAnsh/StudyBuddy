@@ -1,17 +1,18 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { logout, getCurrentUser } from '../redux/slices/authSlice';
 import { getMyTasks, getAssignedByMe } from '../redux/slices/taskSlice';
 import { getBuddies, getReceivedRequests } from '../redux/slices/buddySlice';
+import { fetchNotificationCounts, markScopeRead } from '../redux/slices/notificationSlice';
 import TaskCard from './TaskCard';
 import AssignTask from './AssignTask';
 import Notes from './Notes';
 import ActivityFeed from './ActivityFeed';
 import UserSearch from './UserSearch';
 import './Dashboard.css';
-import axiosInstance from '../config/axios';
 import ProfileSettings from './ProfileSettings';
+import { resolveUserAvatarUrl, uiAvatarsFallback } from '../utils/avatarUrl';
 
 const Dashboard = () => {
   const dispatch = useDispatch();
@@ -19,20 +20,17 @@ const Dashboard = () => {
   const { user } = useSelector((state) => state.auth);
   const { myTasks, assignedByMe, isLoading } = useSelector((state) => state.tasks);
   const { buddies, receivedRequests } = useSelector((state) => state.buddies);
+  const notificationCounts = useSelector((state) => state.notifications.counts);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [activeTab, setActiveTab] = useState('my-tasks');
   const [filterCategory, setFilterCategory] = useState('all');
   const [showAllCategories, setShowAllCategories] = useState(false);
-  const [allUserCategories, setAllUserCategories] = useState([]);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showXPNotification, setShowXPNotification] = useState(false);
   const [xpGained, setXpGained] = useState(0);
   const userMenuRef = useRef(null);
-  const toastIdRef = useRef(0);
-  const [toasts, setToasts] = useState([]);
-  console.log("showusermenu: ",showUserMenu)
 
   useEffect(() => {
     dispatch(getMyTasks());
@@ -40,20 +38,12 @@ const Dashboard = () => {
     dispatch(getCurrentUser());
     dispatch(getBuddies());
     dispatch(getReceivedRequests());
+    dispatch(fetchNotificationCounts());
   }, [dispatch]);
 
   useEffect(() => {
-    const fetchAllCategories = async () => {
-      try {
-        const response = await axiosInstance.get('/users/all-categories');
-        setAllUserCategories(response.data.categories);
-      } catch (error) {
-        console.error('Failed to fetch categories:', error);
-      }
-    };
-    
-    fetchAllCategories();
-  }, []);
+    dispatch(markScopeRead('my_tasks'));
+  }, [dispatch]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -64,22 +54,6 @@ const Dashboard = () => {
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  useEffect(() => {
-    const handleNotify = (event) => {
-      const { type = 'info', message = '' } = event.detail || {};
-      if (!message) return;
-      const id = toastIdRef.current + 1;
-      toastIdRef.current = id;
-      setToasts((prev) => [...prev, { id, type, message }]);
-      setTimeout(() => {
-        setToasts((prev) => prev.filter((toast) => toast.id !== id));
-      }, 3200);
-    };
-
-    window.addEventListener('app-notify', handleNotify);
-    return () => window.removeEventListener('app-notify', handleNotify);
   }, []);
 
   // imporoved code - added escape key and used pointerdown
@@ -112,7 +86,6 @@ const Dashboard = () => {
     if (xp > 0) {
       setXpGained(xp);
       setShowXPNotification(true);
-      dispatch(getCurrentUser());
       setTimeout(() => {
         setShowXPNotification(false);
       }, 3000);
@@ -124,21 +97,57 @@ const Dashboard = () => {
     navigate('/');
   };
 
+  const TAB_SCOPE = {
+    'my-tasks': 'my_tasks',
+    'assigned-by-me': 'assigned_by_me',
+    notes: 'notes',
+    activity: 'activity',
+  };
+
+  const goTab = (tab) => {
+    const scope = TAB_SCOPE[tab];
+    if (scope) dispatch(markScopeRead(scope));
+    setActiveTab(tab);
+  };
+
   const handleProfileClick = () => {
     setShowUserMenu(false);
     navigate(`/profile/${user?.username}`);
   };
 
-  const defaultCategories = ['DSA', 'System Design', 'Web Dev', 'React', 'JavaScript'];
-
-  const ALL_CATEGORIES = [
-    ...new Set([
-      ...defaultCategories,
-      ...allUserCategories
-    ])
+  const DEFAULT_TASK_CATEGORIES = [
+    'General',
+    'DSA',
+    'System Design',
+    'Web Dev',
+    'React',
+    'JavaScript',
+    'Other',
   ];
 
-  const pillCategories = ['all', ...ALL_CATEGORIES];
+  const pillCategories = useMemo(() => {
+    const seen = new Set();
+    const out = [];
+    for (const c of DEFAULT_TASK_CATEGORIES) {
+      if (c && !seen.has(c)) {
+        seen.add(c);
+        out.push(c);
+      }
+    }
+    for (const c of user?.customCategories || []) {
+      if (c && !seen.has(c)) {
+        seen.add(c);
+        out.push(c);
+      }
+    }
+    return ['all', ...out];
+  }, [user?.customCategories]);
+
+  useEffect(() => {
+    if (filterCategory !== 'all' && !pillCategories.includes(filterCategory)) {
+      setFilterCategory('all');
+    }
+  }, [pillCategories, filterCategory]);
 
   const filterTasks = (tasks) => {
     if (filterCategory === 'all') return tasks;
@@ -147,22 +156,17 @@ const Dashboard = () => {
 
   const groupTasksByCategory = (tasks) => {
     const grouped = {};
-    ALL_CATEGORIES.forEach(cat => {
-      const catTasks = tasks.filter(task => task.category === cat);
-      if (catTasks.length > 0) {
-        grouped[cat] = catTasks;
-      }
-    });
+    for (const task of tasks) {
+      const cat = task.category || 'General';
+      if (!grouped[cat]) grouped[cat] = [];
+      grouped[cat].push(task);
+    }
     return grouped;
   };
 
   const currentTasks = activeTab === 'my-tasks' ? myTasks : assignedByMe;
   const filteredTasks = filterTasks(currentTasks);
   const groupedTasks = groupTasksByCategory(currentTasks);
-
-  const getAvatarUrl = (avatarNum) => {
-    return `/avatars/avatar-${avatarNum || 1}.png`;
-  };
 
   const currentLevelXP = ((user?.level || 1) - 1) * 100;
   const nextLevelXP = (user?.level || 1) * 100;
@@ -172,23 +176,6 @@ const Dashboard = () => {
 
   return (
     <div className="professional-dashboard">
-      {toasts.length > 0 && (
-        <div className="toast-stack">
-          {toasts.map((toast) => (
-            <div key={toast.id} className={`toast-item ${toast.type}`}>
-              <span className="toast-message">{toast.message}</span>
-              <button
-                className="toast-close"
-                onClick={() =>
-                  setToasts((prev) => prev.filter((t) => t.id !== toast.id))
-                }
-              >
-                ×
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
       {showXPNotification && (
         <div className="xp-notification-pro">
           <div className="xp-notification-content-pro">
@@ -219,16 +206,31 @@ const Dashboard = () => {
         </div>
 
         <div className="header-right">
+          <button
+            type="button"
+            className="header-notify-bell-pro"
+            onClick={() => navigate('/notifications')}
+            aria-label="Notifications"
+          >
+            <span className="header-notify-icon-pro" aria-hidden>
+              &#128276;
+            </span>
+            {(notificationCounts?.total || 0) > 0 && (
+              <span className="header-notify-badge-pro">
+                {notificationCounts.total > 99 ? '99+' : notificationCounts.total}
+              </span>
+            )}
+          </button>
           <div className="user-menu-wrapper-pro" ref={userMenuRef}>
             <div 
               className="user-avatar-btn-pro"
               onClick={() => setShowUserMenu(!showUserMenu)}
             >
               <img 
-                src={getAvatarUrl(user?.avatar)} 
+                src={resolveUserAvatarUrl(user)} 
                 alt={user?.name}
                 onError={(e) => {
-                  e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=4f46e5&color=fff&size=80`;
+                  e.target.src = uiAvatarsFallback(user?.name, 80);
                 }}
               />
             </div>
@@ -247,8 +249,25 @@ const Dashboard = () => {
               </div>
             )}
           </div>
-          <button className="header-btn-pro" onClick={() => navigate('/buddies')}>
+          <button
+            type="button"
+            className="header-btn-pro nav-btn-with-dot-pro"
+            onClick={() => navigate('/buddies')}
+          >
             Buddies
+            {(notificationCounts?.buddies || 0) > 0 && (
+              <span className="nav-unread-dot-pro" aria-hidden />
+            )}
+          </button>
+          <button
+            type="button"
+            className="header-btn-pro nav-btn-with-dot-pro"
+            onClick={() => navigate('/study-rooms')}
+          >
+            Study rooms
+            {(notificationCounts?.study_rooms || 0) > 0 && (
+              <span className="nav-unread-dot-pro" aria-hidden />
+            )}
           </button>
           <button className="header-btn-pro primary" onClick={() => setShowAssignModal(true)}>
             Assign Task
@@ -259,10 +278,10 @@ const Dashboard = () => {
               onClick={() => setShowUserMenu(!showUserMenu)}
             >
               <img 
-                src={getAvatarUrl(user?.avatar)} 
+                src={resolveUserAvatarUrl(user)} 
                 alt={user?.name}
                 onError={(e) => {
-                  e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=4f46e5&color=fff&size=80`;
+                  e.target.src = uiAvatarsFallback(user?.name, 80);
                 }}
               />
             </div>
@@ -286,10 +305,10 @@ const Dashboard = () => {
           <div className="user-profile-card-pro">
             <div className="profile-avatar-pro">
               <img 
-                src={getAvatarUrl(user?.avatar)} 
+                src={resolveUserAvatarUrl(user)} 
                 alt={user?.name}
                 onError={(e) => {
-                  e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=4f46e5&color=fff&size=120`;
+                  e.target.src = uiAvatarsFallback(user?.name, 120);
                 }}
               />
             </div>
@@ -336,28 +355,44 @@ const Dashboard = () => {
         <main className="main-content-pro">
           <div className="tabs-container-pro">
             <button
-              className={`tab-pro ${activeTab === 'my-tasks' ? 'active' : ''}`}
-              onClick={() => setActiveTab('my-tasks')}
+              type="button"
+              className={`tab-pro tab-with-dot-pro ${activeTab === 'my-tasks' ? 'active' : ''}`}
+              onClick={() => goTab('my-tasks')}
             >
               My Tasks ({myTasks.length})
+              {(notificationCounts?.my_tasks || 0) > 0 && (
+                <span className="tab-unread-dot-pro" aria-hidden />
+              )}
             </button>
             <button
-              className={`tab-pro ${activeTab === 'assigned-by-me' ? 'active' : ''}`}
-              onClick={() => setActiveTab('assigned-by-me')}
+              type="button"
+              className={`tab-pro tab-with-dot-pro ${activeTab === 'assigned-by-me' ? 'active' : ''}`}
+              onClick={() => goTab('assigned-by-me')}
             >
               Assigned by Me ({assignedByMe.length})
+              {(notificationCounts?.assigned_by_me || 0) > 0 && (
+                <span className="tab-unread-dot-pro" aria-hidden />
+              )}
             </button>
             <button
-              className={`tab-pro ${activeTab === 'notes' ? 'active' : ''}`}
-              onClick={() => setActiveTab('notes')}
+              type="button"
+              className={`tab-pro tab-with-dot-pro ${activeTab === 'notes' ? 'active' : ''}`}
+              onClick={() => goTab('notes')}
             >
               Shared Notes
+              {(notificationCounts?.notes || 0) > 0 && (
+                <span className="tab-unread-dot-pro" aria-hidden />
+              )}
             </button>
             <button
-              className={`tab-pro ${activeTab === 'activity' ? 'active' : ''}`}
-              onClick={() => setActiveTab('activity')}
+              type="button"
+              className={`tab-pro tab-with-dot-pro ${activeTab === 'activity' ? 'active' : ''}`}
+              onClick={() => goTab('activity')}
             >
               Activity Feed
+              {(notificationCounts?.activity || 0) > 0 && (
+                <span className="tab-unread-dot-pro" aria-hidden />
+              )}
             </button>
           </div>
 
@@ -427,43 +462,47 @@ const Dashboard = () => {
                       tasks.length > 0 && (
                         <div key={category} className="category-group-pro">
                           <h4 className="category-title-pro">{category}</h4>
-                          <div className="tasks-horizontal-scroll">
-                            {tasks.map(task => (
-                              <TaskCard 
-                                key={task._id} 
-                                task={task} 
-                                showAssignedTo={activeTab === 'assigned-by-me'}
-                                onXPGained={handleXPGained}
-                              />
-                            ))}
+                          <div className="category-cards-scroll-pro">
+                            <div className="tasks-cards-grid">
+                              {tasks.map(task => (
+                                <TaskCard
+                                  key={task._id}
+                                  task={task}
+                                  showAssignedTo={activeTab === 'assigned-by-me'}
+                                  onXPGained={handleXPGained}
+                                />
+                              ))}
+                            </div>
                           </div>
                         </div>
                       )
                     )}
                   </div>
                 ) : (
-                  <div className="tasks-horizontal-scroll">
-                    {filteredTasks.map(task => (
-                      <TaskCard 
-                        key={task._id} 
-                        task={task} 
-                        showAssignedTo={activeTab === 'assigned-by-me'}
-                        onXPGained={handleXPGained}
-                      />
-                    ))}
+                  <div className="category-cards-scroll-pro">
+                    <div className="tasks-cards-grid">
+                      {filteredTasks.map(task => (
+                        <TaskCard
+                          key={task._id}
+                          task={task}
+                          showAssignedTo={activeTab === 'assigned-by-me'}
+                          onXPGained={handleXPGained}
+                        />
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
             </>
           )}
 
-          {activeTab === 'notes' && <Notes />}
-          {activeTab === 'activity' && <ActivityFeed />}
+          {activeTab === 'notes' && <Notes onXPGained={handleXPGained} />}
+          {activeTab === 'activity' && <ActivityFeed onXPGained={handleXPGained} />}
         </main>
       </div>
 
       {showAssignModal && (
-        <AssignTask onClose={() => setShowAssignModal(false)} />
+        <AssignTask onClose={() => setShowAssignModal(false)} onXPGained={handleXPGained} />
       )}
       
       {showSearchModal && (

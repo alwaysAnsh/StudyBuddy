@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../config/axios';
+import { resolveUserAvatarUrl, uiAvatarsFallback } from '../utils/avatarUrl';
 import './UserSearch.css';
 
 const UserSearch = ({ onClose }) => {
@@ -35,10 +36,6 @@ const UserSearch = ({ onClose }) => {
   const handleUserClick = (username) => {
     navigate(`/profile/${username}`);
     if (onClose) onClose();
-  };
-
-  const getAvatarUrl = (avatarNum) => {
-    return `/avatars/avatar-${avatarNum}.png`;
   };
 
   return (
@@ -85,10 +82,10 @@ const UserSearch = ({ onClose }) => {
                   >
                     <div className="user-result-avatar">
                       <img
-                        src={getAvatarUrl(user.avatar)}
+                        src={resolveUserAvatarUrl(user)}
                         alt={user.name}
                         onError={(e) => {
-                          e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=667eea&color=fff&size=80`;
+                          e.target.src = uiAvatarsFallback(user.name, 80);
                         }}
                       />
                     </div>

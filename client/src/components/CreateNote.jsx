@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { createNote, getAllNotes } from '../redux/slices/noteSlice';
+import { getCurrentUser } from '../redux/slices/authSlice';
 import './CreateNote.css';
 import { addCustomCategory, deleteCustomCategory } from '../redux/slices/authSlice';
-import { notify } from './notify';
+import { notify } from '../utils/notify';
+import { useConfirm } from '../context/ConfirmContext';
 
-const CreateNote = ({ onClose }) => {
+const XP_NOTE_CREATED = 3;
+
+const CreateNote = ({ onClose, onXPGained }) => {
   const dispatch = useDispatch();
+  const { confirm } = useConfirm();
   const { user } = useSelector((state) => state.auth);
   
   const [formData, setFormData] = useState({
@@ -32,32 +37,37 @@ const CreateNote = ({ onClose }) => {
   };
 
   const handleAddCategory = async () => {
-      if (!newCategory.trim()) {
-        notify({ type: 'error', message: 'Please enter a category name.' });
-        return;
+    if (!newCategory.trim()) {
+      notify({ type: 'error', message: 'Please enter a category name.' });
+      return;
+    }
+
+    try {
+      await dispatch(addCustomCategory(newCategory.trim())).unwrap();
+      setNewCategory('');
+      setShowAddCategory(false);
+      notify({ type: 'success', message: 'Category added successfully.' });
+    } catch (error) {
+      notify({ type: 'error', message: error || 'Failed to add category.' });
+    }
+  };
+
+  const handleDeleteCategory = async (category) => {
+    const ok = await confirm({
+      title: 'Delete category?',
+      message: `Remove "${category}" from your custom categories?`,
+      confirmLabel: 'Delete',
+      variant: 'danger',
+    });
+    if (!ok) return;
+    try {
+      await dispatch(deleteCustomCategory(category)).unwrap();
+      if (formData.category === category) {
+        setFormData({ ...formData, category: 'DSA' });
       }
-  
-      try {
-        await dispatch(addCustomCategory(newCategory.trim())).unwrap();
-        setNewCategory('');
-        setShowAddCategory(false);
-        notify({ type: 'success', message: 'Category added successfully.' });
-      } catch (error) {
-        notify({ type: 'error', message: error || 'Failed to add category.' });
-      }
-    };
-  
-    const handleDeleteCategory = async (category) => {
-      if (window.confirm(`Delete category "${category}"?`)) {
-        try {
-        await dispatch(deleteCustomCategory(category)).unwrap();
-        if (formData.category === category) {
-          setFormData({ ...formData, category: 'DSA' });
-        }
-        notify({ type: 'success', message: 'Category deleted successfully.' });
-      } catch (error) {
-        notify({ type: 'error', message: error || 'Failed to delete category.' });
-      }
+      notify({ type: 'success', message: 'Category deleted successfully.' });
+    } catch (error) {
+      notify({ type: 'error', message: error || 'Failed to delete category.' });
     }
   };
 
@@ -74,6 +84,8 @@ const CreateNote = ({ onClose }) => {
     try {
       await dispatch(createNote(formData)).unwrap();
       dispatch(getAllNotes());
+      await dispatch(getCurrentUser()).unwrap();
+      onXPGained?.(XP_NOTE_CREATED);
       notify({ type: 'success', message: 'Note created successfully.' });
       onClose();
     } catch (error) {
