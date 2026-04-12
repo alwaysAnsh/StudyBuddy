@@ -1,8 +1,8 @@
 import axiosInstance from '../config/axios';
 
 /**
- * URL for media paths like `/uploads/...`.
- * In Vite dev, `/uploads` is proxied to the API server so use a same-origin path (avoids broken img when API host differs).
+ * URL for media: full `https://` URLs (e.g. Cloudinary) are returned as-is.
+ * Relative `/uploads/...` is resolved against the API origin; in Vite dev, `/uploads` is proxied.
  */
 export function resolveMediaUrl(path) {
   if (!path) return '';

@@ -10,6 +10,7 @@ import { fileURLToPath } from 'url';
 import multer from 'multer';
 import { attachStudyRoomRoutes } from './studyRooms.js';
 import { notifyUser, attachNotificationRoutes } from './notifications.js';
+import { isCloudinaryConfigured, uploadImageBuffer } from './lib/cloudinaryUpload.js';
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -18,6 +19,18 @@ const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
+const imageUploadFileFilter = (_req, file, cb) => {
+  const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+  if (allowed.includes(file.mimetype)) {
+    return cb(null, true);
+  }
+  cb(
+    new Error(
+      'Only JPEG, PNG, WebP, or GIF are allowed. iPhone HEIC/HEIF is not shown in browsers—export as JPEG in Photos first.'
+    )
+  );
+};
+
 const uploadStorage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, uploadDir),
   filename: (_req, file, cb) => {
@@ -35,20 +48,17 @@ const uploadStorage = multer.diskStorage({
     cb(null, `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`);
   },
 });
-const upload = multer({
+
+const uploadDisk = multer({
   storage: uploadStorage,
   limits: { fileSize: 8 * 1024 * 1024 },
-  fileFilter: (_req, file, cb) => {
-    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-    if (allowed.includes(file.mimetype)) {
-      return cb(null, true);
-    }
-    cb(
-      new Error(
-        'Only JPEG, PNG, WebP, or GIF are allowed. iPhone HEIC/HEIF is not shown in browsers—export as JPEG in Photos first.'
-      )
-    );
-  },
+  fileFilter: imageUploadFileFilter,
+});
+
+const uploadMemory = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 8 * 1024 * 1024 },
+  fileFilter: imageUploadFileFilter,
 });
 
 const app = express();
@@ -1663,7 +1673,7 @@ app.post('/api/activities', authenticateToken, async (req, res) => {
       link: link || '',
       category: category || 'General',
       hashtags: tagList,
-      imageUrl: imageUrl ? String(imageUrl).slice(0, 500) : '',
+      imageUrl: imageUrl ? String(imageUrl).slice(0, 2048) : '',
       shareCode,
       createdBy: req.user.id,
       supportedBy: [],
@@ -2037,9 +2047,12 @@ app.post('/api/auth/change-password', authenticateToken, async (req, res) => {
 });
 
 
-// File uploads (notes / study room resources) — stored on server disk, not a third-party CDN
+// File uploads — Cloudinary when CLOUDINARY_* env vars are set; otherwise local disk + /uploads
 app.post('/api/uploads', authenticateToken, (req, res) => {
-  upload.single('file')(req, res, (err) => {
+  const useCloudinary = isCloudinaryConfigured();
+  const parser = useCloudinary ? uploadMemory.single('file') : uploadDisk.single('file');
+
+  parser(req, res, async (err) => {
     if (err) {
       const message =
         err.message ||
@@ -2049,6 +2062,34 @@ app.post('/api/uploads', authenticateToken, (req, res) => {
     if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
     }
+
+    if (useCloudinary) {
+      try {
+        const buffer = req.file.buffer;
+        if (!buffer?.length) {
+          return res.status(400).json({ message: 'Empty file' });
+        }
+        const result = await uploadImageBuffer(buffer, { folder: 'karya' });
+        const url = result.secure_url || result.url;
+        if (!url) {
+          return res.status(500).json({ message: 'Upload succeeded but no URL returned' });
+        }
+        return res.json({
+          url,
+          originalName: req.file.originalname,
+          publicId: result.public_id,
+        });
+      } catch (e) {
+        console.error('Cloudinary upload error:', e);
+        const code = e?.http_code ?? e?.error?.http_code;
+        const message =
+          code === 401
+            ? 'Cloudinary rejected credentials. Check CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET.'
+            : e?.message || 'Cloudinary upload failed';
+        return res.status(500).json({ message });
+      }
+    }
+
     res.json({
       url: `/uploads/${req.file.filename}`,
       originalName: req.file.originalname,
@@ -2081,4 +2122,9 @@ const PORT = process.env.PORT || 5050;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📍 API available at http://localhost:${PORT}/api`);
+  if (isCloudinaryConfigured()) {
+    console.log('☁️  Image uploads: Cloudinary (folder karya/)');
+  } else {
+    console.log('📁 Image uploads: local disk (set CLOUDINARY_* to use Cloudinary)');
+  }
 });

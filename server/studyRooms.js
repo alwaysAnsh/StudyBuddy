@@ -865,7 +865,7 @@ export function attachStudyRoomRoutes(app, { authenticateToken, User }) {
               .filter((a) => a && a.url)
               .slice(0, 8)
               .map((a) => ({
-                url: String(a.url).slice(0, 500),
+                url: String(a.url).slice(0, 2048),
                 originalName: String(a.originalName || '').slice(0, 200),
               }))
           : [],
@@ -924,7 +924,7 @@ export function attachStudyRoomRoutes(app, { authenticateToken, User }) {
               .filter((a) => a && a.url)
               .slice(0, 8)
               .map((a) => ({
-                url: String(a.url).slice(0, 500),
+                url: String(a.url).slice(0, 2048),
                 originalName: String(a.originalName || '').slice(0, 200),
               }))
           : [];

@@ -1,1 +1,50 @@
+# Dependencies
+node_modules/
+server/node_modules/
+client/node_modules/
+
+# Environment / secrets (never commit real keys)
+.env
+.env.*
+!.env.example
+
+# Build output
+client/dist/
+dist/
+dist-ssr/
+*.local
+
+# Uploaded user files (local disk fallback)
 server/uploads/
+
+# Logs & debug
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Test / coverage
+coverage/
+.nyc_output/
+*.lcov
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor / IDE
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Misc
+*.pem
+.cache/
