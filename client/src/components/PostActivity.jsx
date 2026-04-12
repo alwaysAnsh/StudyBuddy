@@ -147,7 +147,12 @@ const PostActivity = ({ onClose, onXPGained }) => {
           <div className="form-group">
             <label>Photo (optional)</label>
             <label className="pa-file-pick">
-              <input type="file" accept="image/*" disabled={uploading} onChange={handleImage} />
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif,.jpg,.jpeg,.png,.webp,.gif"
+                disabled={uploading}
+                onChange={handleImage}
+              />
               <span>{uploading ? 'Uploading…' : imageUrl ? 'Replace image' : 'Choose image'}</span>
             </label>
             {imageUrl && (

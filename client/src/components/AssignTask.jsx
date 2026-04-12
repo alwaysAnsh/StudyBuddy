@@ -33,7 +33,7 @@ const AssignTask = ({ onClose, onXPGained }) => {
     dispatch(getBuddies());
   }, [dispatch]);
 
-  const defaultCategories = ['DSA', 'System Design', 'Web Dev', 'React', 'JavaScript', 'Other'];
+  const defaultCategories = ['DSA', 'System Design', 'Web Dev', 'React', 'JavaScript'];
   const customCategories = user?.customCategories || [];
   const allCategories = [...defaultCategories, ...customCategories];
 
@@ -51,7 +51,9 @@ const AssignTask = ({ onClose, onXPGained }) => {
     }
 
     try {
-      await dispatch(addCustomCategory(newCategory.trim())).unwrap();
+      const name = newCategory.trim();
+      await dispatch(addCustomCategory(name)).unwrap();
+      setFormData((prev) => ({ ...prev, category: name }));
       setNewCategory('');
       setShowAddCategory(false);
       notify({ type: 'success', message: 'Category added successfully.' });

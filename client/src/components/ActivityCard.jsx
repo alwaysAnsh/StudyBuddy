@@ -1,7 +1,6 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { deleteActivity, toggleSupport } from '../redux/slices/activitySlice';
-import { getCurrentUser } from '../redux/slices/authSlice';
 import './ActivityCard.css';
 import { useConfirm } from '../context/ConfirmContext';
 import { resolveMediaUrl } from '../utils/resolveMediaUrl';
@@ -10,9 +9,7 @@ import { notify } from '../utils/notify';
 
 const uid = (u) => String(u?._id || u?.id || '');
 
-const XP_SUPPORT = 3;
-
-const ActivityCard = ({ activity, onXPGained }) => {
+const ActivityCard = ({ activity }) => {
   const dispatch = useDispatch();
   const { confirm } = useConfirm();
   const { user, isAuthenticated } = useSelector((state) => state.auth);
@@ -38,37 +35,36 @@ const ActivityCard = ({ activity, onXPGained }) => {
     dispatch(deleteActivity(activity._id));
   };
 
-  const handleSupport = async () => {
-    const wasSupported = supported;
-    try {
-      const updated = await dispatch(toggleSupport(activity._id)).unwrap();
-      await dispatch(getCurrentUser()).unwrap();
-      const nowSupported = (updated.supportedBy || []).some((u) => uid(u) === uid(user));
-      if (!wasSupported && nowSupported && !isCreator && onXPGained) {
-        onXPGained(XP_SUPPORT);
-      }
-    } catch {
+  const handleSupport = () => {
+    dispatch(toggleSupport(activity._id)).catch(() => {
       notify({ type: 'error', message: 'Could not update support.' });
-    }
+    });
   };
 
-  const handleShare = useCallback(async () => {
+  const handleShare = useCallback(() => {
     const text = sharePath;
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: activity.title, text: activity.description?.slice(0, 200), url: text });
-        return;
-      }
-    } catch {
-      /* user cancelled share sheet */
+    const ok = () => notify({ type: 'success', message: 'Link copied to clipboard.' });
+    const fail = () => notify({ type: 'error', message: 'Could not copy link.' });
+
+    if (navigator.clipboard?.writeText) {
+      void navigator.clipboard.writeText(text).then(ok, fail);
+      return;
     }
     try {
-      await navigator.clipboard.writeText(text);
-      notify({ type: 'success', message: 'Link copied to clipboard.' });
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      ok();
     } catch {
-      notify({ type: 'error', message: 'Could not copy link.' });
+      fail();
     }
-  }, [sharePath, activity.title, activity.description]);
+  }, [sharePath]);
 
   const formatDate = (date) =>
     new Date(date).toLocaleString(undefined, {
@@ -77,6 +73,11 @@ const ActivityCard = ({ activity, onXPGained }) => {
     });
 
   const imgUrl = activity.imageUrl ? resolveMediaUrl(activity.imageUrl) : '';
+  const [mediaBroken, setMediaBroken] = useState(false);
+
+  useEffect(() => {
+    setMediaBroken(false);
+  }, [imgUrl]);
 
   return (
     <article className="ig-activity-card">
@@ -104,9 +105,19 @@ const ActivityCard = ({ activity, onXPGained }) => {
         </div>
       </header>
 
-      {imgUrl ? (
+      {imgUrl && !mediaBroken ? (
         <div className="ig-activity-media">
-          <img src={imgUrl} alt="" className="ig-activity-image" />
+          <img
+            src={imgUrl}
+            alt=""
+            className="ig-activity-image"
+            onError={() => setMediaBroken(true)}
+          />
+        </div>
+      ) : null}
+      {imgUrl && mediaBroken ? (
+        <div className="ig-activity-media ig-activity-media-fallback" role="img" aria-label="Image unavailable">
+          <p>Could not display this image (wrong URL, unsupported format like HEIC, or file missing).</p>
         </div>
       ) : null}
 

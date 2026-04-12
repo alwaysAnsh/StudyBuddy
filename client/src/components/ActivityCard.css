@@ -90,6 +90,23 @@
   overflow: hidden;
 }
 
+.ig-activity-media-fallback {
+  aspect-ratio: 16 / 9;
+  max-height: 220px;
+  background: #f1f5f9;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  padding: 1rem 1.25rem;
+}
+
+.ig-activity-media-fallback p {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: #64748b;
+  text-align: center;
+}
+
 .ig-activity-image {
   display: block;
   max-width: 100%;

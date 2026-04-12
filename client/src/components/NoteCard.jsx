@@ -14,7 +14,7 @@ const NoteCard = ({ note, onViewFull }) => {
   const [editContent, setEditContent] = useState(note.content);
   const [editCategory, setEditCategory] = useState(note.category);
 
-  const categories = ['General', 'DSA', 'System Design', 'Web Dev', 'React', 'JavaScript', 'Other'];
+  const categories = ['General', 'DSA', 'System Design', 'Web Dev', 'React', 'JavaScript'];
   const isCreator = note.createdBy._id === user?._id;
 
   const handleDelete = async () => {

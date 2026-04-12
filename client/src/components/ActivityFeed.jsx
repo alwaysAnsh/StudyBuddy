@@ -114,7 +114,7 @@ const ActivityFeed = ({ onXPGained }) => {
           <>
             <div className="activity-feed-stack-pro">
               {activities.map((activity) => (
-                <ActivityCard key={activity._id} activity={activity} onXPGained={onXPGained} />
+                <ActivityCard key={activity._id} activity={activity} />
               ))}
             </div>
             <div ref={sentinelRef} className="activity-feed-sentinel-pro" aria-hidden />

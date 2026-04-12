@@ -17,7 +17,7 @@ const CreateActivity = ({ onClose }) => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const defaultCategories = ['General', 'DSA', 'System Design', 'Web Dev', 'React', 'JavaScript', 'Other'];
+  const defaultCategories = ['General', 'DSA', 'System Design', 'Web Dev', 'React', 'JavaScript'];
   const userCustomCategories = user?.customCategories || [];
   const allCategories = [...defaultCategories, ...userCustomCategories];
 

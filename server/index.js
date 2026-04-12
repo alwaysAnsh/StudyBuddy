@@ -21,13 +21,34 @@ if (!fs.existsSync(uploadDir)) {
 const uploadStorage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, uploadDir),
   filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname || '').slice(0, 12);
+    let ext = path.extname(file.originalname || '').slice(0, 12).toLowerCase();
+    if (!ext || ext === '.') {
+      const fromMime = {
+        'image/jpeg': '.jpg',
+        'image/jpg': '.jpg',
+        'image/png': '.png',
+        'image/webp': '.webp',
+        'image/gif': '.gif',
+      }[file.mimetype];
+      ext = fromMime || '.jpg';
+    }
     cb(null, `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`);
   },
 });
 const upload = multer({
   storage: uploadStorage,
   limits: { fileSize: 8 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (allowed.includes(file.mimetype)) {
+      return cb(null, true);
+    }
+    cb(
+      new Error(
+        'Only JPEG, PNG, WebP, or GIF are allowed. iPhone HEIC/HEIF is not shown in browsers—export as JPEG in Photos first.'
+      )
+    );
+  },
 });
 
 const app = express();
@@ -36,7 +57,7 @@ const app = express();
 // CORS - Simple and Permissive for Development.     https://studdy-buddy-rosy.vercel.app , http://localhost:5173
 // ============================================
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'https://studdy-buddy-rosy.vercel.app');
+  res.header('Access-Control-Allow-Origin', 'http://localhost:5173');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   res.header('Access-Control-Allow-Credentials', 'true');
@@ -1701,14 +1722,6 @@ app.patch('/api/activities/:id/support', authenticateToken, async (req, res) => 
 
     await activity.save();
 
-    if (!has && activity.createdBy.toString() !== userId) {
-      const supporter = await User.findById(userId);
-      if (supporter) {
-        supporter.xp += 3;
-        await supporter.save();
-      }
-    }
-
     const updatedActivity = await Activity.findById(activity._id)
       .populate('createdBy', 'username name avatar')
       .populate('completedBy', 'username name avatar')
@@ -2024,14 +2037,22 @@ app.post('/api/auth/change-password', authenticateToken, async (req, res) => {
 });
 
 
-// File uploads (notes / study room resources)
-app.post('/api/uploads', authenticateToken, upload.single('file'), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ message: 'No file uploaded' });
-  }
-  res.json({
-    url: `/uploads/${req.file.filename}`,
-    originalName: req.file.originalname,
+// File uploads (notes / study room resources) — stored on server disk, not a third-party CDN
+app.post('/api/uploads', authenticateToken, (req, res) => {
+  upload.single('file')(req, res, (err) => {
+    if (err) {
+      const message =
+        err.message ||
+        (err.code === 'LIMIT_FILE_SIZE' ? 'File too large (max 8 MB).' : 'Upload failed');
+      return res.status(400).json({ message });
+    }
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+    res.json({
+      url: `/uploads/${req.file.filename}`,
+      originalName: req.file.originalname,
+    });
   });
 });
 app.use('/uploads', express.static(uploadDir));

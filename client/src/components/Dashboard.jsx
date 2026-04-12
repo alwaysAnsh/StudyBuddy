@@ -122,7 +122,6 @@ const Dashboard = () => {
     'Web Dev',
     'React',
     'JavaScript',
-    'Other',
   ];
 
   const pillCategories = useMemo(() => {

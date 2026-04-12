@@ -12,7 +12,6 @@ const DEFAULT_NOTE_CATEGORIES = [
   'Web Dev',
   'React',
   'JavaScript',
-  'Other',
 ];
 
 const sortCategoryKeys = (keys) => {
