@@ -1,0 +1,282 @@
+:root {
+  --app-bg: #f8fafc;
+  --surface-bg: #ffffff;
+  --card-bg: #f8fafc;
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --border-color: rgba(15, 23, 42, 0.12);
+}
+
+[data-theme='dark'] {
+  --app-bg: #020617;
+  --surface-bg: #0b1220;
+  --card-bg: #111827;
+  --text-primary: #e2e8f0;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --border-color: rgba(148, 163, 184, 0.25);
+}
+
+html,
+body,
+#root {
+  background: var(--app-bg);
+  color: var(--text-primary);
+}
+
+[data-theme='dark'] .professional-dashboard,
+[data-theme='dark'] .home-page,
+[data-theme='dark'] .about-page,
+[data-theme='dark'] .legal-page,
+[data-theme='dark'] .login-container,
+[data-theme='dark'] .signup-page,
+[data-theme='dark'] .app-layout,
+[data-theme='dark'] .buddies-container,
+[data-theme='dark'] .study-rooms-page,
+[data-theme='dark'] .srd-page,
+[data-theme='dark'] .notifications-page,
+[data-theme='dark'] .profile-container {
+  background: var(--app-bg);
+  color: var(--text-primary);
+}
+
+[data-theme='dark'] .home-page {
+  --ink: #e2e8f0;
+  --muted: #cbd5e1;
+  --soft: #0f172a;
+}
+
+[data-theme='dark'] .professional-header,
+[data-theme='dark'] .top-nav,
+[data-theme='dark'] .login-right,
+[data-theme='dark'] .signup-form-section,
+[data-theme='dark'] .about-section.gray-bg,
+[data-theme='dark'] .app-page-header-bell,
+[data-theme='dark'] .app-page-header-dash,
+[data-theme='dark'] .user-profile-card-pro,
+[data-theme='dark'] .levels-modal-pro,
+[data-theme='dark'] .tabs-container-pro,
+[data-theme='dark'] .tasks-section-pro,
+[data-theme='dark'] .category-group-pro,
+[data-theme='dark'] .buddies-header,
+[data-theme='dark'] .tab-panel,
+[data-theme='dark'] .buddy-card,
+[data-theme='dark'] .request-card,
+[data-theme='dark'] .search-result-card,
+[data-theme='dark'] .room-card,
+[data-theme='dark'] .study-rooms-invites,
+[data-theme='dark'] .study-rooms-hero,
+[data-theme='dark'] .sr-modal-content,
+[data-theme='dark'] .srd-panel,
+[data-theme='dark'] .srd-task-card,
+[data-theme='dark'] .srd-note-card,
+[data-theme='dark'] .user-dropdown-pro,
+[data-theme='dark'] .home-page .feature-card,
+[data-theme='dark'] .home-page .floating-card,
+[data-theme='dark'] .feature-pill,
+[data-theme='dark'] .home-page .business-content,
+[data-theme='dark'] .home-page .xp-card,
+[data-theme='dark'] .faq-item,
+[data-theme='dark'] .about-feature-item,
+[data-theme='dark'] .about-cta,
+[data-theme='dark'] .legal-container,
+[data-theme='dark'] .value-item,
+[data-theme='dark'] .mission-card,
+[data-theme='dark'] .vision-card,
+[data-theme='dark'] .login-card,
+[data-theme='dark'] .signup-container,
+[data-theme='dark'] .avatar-modal,
+[data-theme='dark'] .modal-content {
+  background: var(--surface-bg);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+[data-theme='dark'] input,
+[data-theme='dark'] textarea,
+[data-theme='dark'] select {
+  background: #0f172a;
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+[data-theme='dark'] .tab-pro,
+[data-theme='dark'] .header-btn-pro,
+[data-theme='dark'] .app-page-header-dash,
+[data-theme='dark'] .dropdown-item-pro,
+[data-theme='dark'] .nav-item,
+[data-theme='dark'] .nav-toggle,
+[data-theme='dark'] .btn-secondary,
+[data-theme='dark'] .about-cta-btn,
+[data-theme='dark'] .social-link,
+[data-theme='dark'] .avatar-select-btn,
+[data-theme='dark'] .slider-track,
+[data-theme='dark'] .modal-close,
+[data-theme='dark'] .view-levels-btn-pro,
+[data-theme='dark'] .study-rooms-btn,
+[data-theme='dark'] .srd-btn,
+[data-theme='dark'] .add-buddy-btn,
+[data-theme='dark'] .cancel-btn,
+[data-theme='dark'] .remove-buddy-btn {
+  background: #0f172a;
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+[data-theme='dark'] .empty-state,
+[data-theme='dark'] .empty-state-pro,
+[data-theme='dark'] .empty-rooms,
+[data-theme='dark'] .search-status,
+[data-theme='dark'] .srd-muted,
+[data-theme='dark'] .about-text,
+[data-theme='dark'] .about-feature-text,
+[data-theme='dark'] .about-cta-text,
+[data-theme='dark'] .legal-updated,
+[data-theme='dark'] .legal-container p,
+[data-theme='dark'] .mission-text,
+[data-theme='dark'] .vision-text,
+[data-theme='dark'] .value-text,
+[data-theme='dark'] .login-header p,
+[data-theme='dark'] .subtitle,
+[data-theme='dark'] .signup-footer,
+[data-theme='dark'] .status-text,
+[data-theme='dark'] .slider-text,
+[data-theme='dark'] .login-info,
+[data-theme='dark'] .form-group label,
+[data-theme='dark'] .form-group-pro label,
+[data-theme='dark'] .logo-text-pro,
+[data-theme='dark'] .profile-username-pro,
+[data-theme='dark'] .stat-label-pro,
+[data-theme='dark'] .section-heading-pro,
+[data-theme='dark'] .section-title,
+[data-theme='dark'] .section-subtitle,
+[data-theme='dark'] .hero-subtitle,
+[data-theme='dark'] .feature-description,
+[data-theme='dark'] .step-description,
+[data-theme='dark'] .business-description,
+[data-theme='dark'] .cta-subtitle,
+[data-theme='dark'] .study-rooms-hero p,
+[data-theme='dark'] .room-card-meta,
+[data-theme='dark'] .result-username,
+[data-theme='dark'] .request-username,
+[data-theme='dark'] .buddy-username,
+[data-theme='dark'] .app-name {
+  color: var(--text-muted);
+}
+
+[data-theme='dark'] .level-row-pro.unlocked {
+  background: rgba(34, 197, 94, 0.15);
+}
+
+[data-theme='dark'] .hero-title,
+[data-theme='dark'] .feature-title,
+[data-theme='dark'] .xp-card h3,
+[data-theme='dark'] .xp-card li strong,
+[data-theme='dark'] .faq-item summary,
+[data-theme='dark'] .step-title,
+[data-theme='dark'] .business-title,
+[data-theme='dark'] .cta-title,
+[data-theme='dark'] .study-rooms-hero h1,
+[data-theme='dark'] .buddy-info h3,
+[data-theme='dark'] .request-info h3,
+[data-theme='dark'] .result-info h3,
+[data-theme='dark'] .category-title-pro,
+[data-theme='dark'] .level-number-pro,
+[data-theme='dark'] .profile-name-pro,
+[data-theme='dark'] .logo-text-pro {
+  color: var(--text-primary);
+}
+
+[data-theme='dark'] .tab-pro.active,
+[data-theme='dark'] .category-pill-pro.active,
+[data-theme='dark'] .study-rooms-btn.primary,
+[data-theme='dark'] .srd-btn.primary {
+  color: #f8fafc;
+}
+
+[data-theme='dark'] .app-footer {
+  background: linear-gradient(180deg, #020617 0%, #0f172a 100%);
+}
+
+[data-theme='dark'] .about-hero,
+[data-theme='dark'] .cta-content,
+[data-theme='dark'] .benefits-section,
+[data-theme='dark'] .values-section {
+  border-color: var(--border-color);
+}
+
+[data-theme='dark'] .login-container,
+[data-theme='dark'] .signup-page {
+  background: radial-gradient(circle at 20% 20%, rgba(34, 211, 238, 0.08), transparent 45%),
+    radial-gradient(circle at 80% 0%, rgba(52, 211, 153, 0.08), transparent 40%),
+    linear-gradient(180deg, #020617 0%, #111827 100%);
+}
+
+[data-theme='dark'] .signup-image-section,
+[data-theme='dark'] .login-left {
+  background: linear-gradient(160deg, #020617 0%, #0f172a 45%, #134e4a 100%);
+}
+
+[data-theme='dark'] .login-left .overlay,
+[data-theme='dark'] .login-left h1,
+[data-theme='dark'] .login-left p {
+  color: #e2e8f0;
+}
+
+[data-theme='dark'] .signup-recovery-alert {
+  background: rgba(245, 158, 11, 0.14);
+  border-color: rgba(245, 158, 11, 0.55);
+  color: #fde68a;
+}
+
+[data-theme='dark'] .form-group input,
+[data-theme='dark'] .select-wrapper select,
+[data-theme='dark'] .form-group-pro input {
+  background: #0f172a;
+  color: #e2e8f0;
+  border-color: var(--border-color);
+}
+
+[data-theme='dark'] .xp-card li,
+[data-theme='dark'] .private-room-points div {
+  background: #0f172a;
+  border-color: var(--border-color);
+}
+
+[data-theme='dark'] .faq-item p {
+  color: #cbd5e1;
+}
+
+[data-theme='dark'] .feature-pill-icon {
+  background: rgba(56, 189, 248, 0.2);
+}
+
+[data-theme='dark'] .feature-marquee-section::before {
+  background: linear-gradient(to right, #020617, rgba(2, 6, 23, 0));
+}
+
+[data-theme='dark'] .feature-marquee-section::after {
+  background: linear-gradient(to left, #020617, rgba(2, 6, 23, 0));
+}
+
+[data-theme='dark'] .top-nav .app-name,
+[data-theme='dark'] .top-nav .nav-item,
+[data-theme='dark'] .top-nav .logo-text,
+[data-theme='dark'] .about-section-title,
+[data-theme='dark'] .legal-container h1,
+[data-theme='dark'] .legal-container h2,
+[data-theme='dark'] .about-feature-title,
+[data-theme='dark'] .about-cta-title,
+[data-theme='dark'] .login-header h2,
+[data-theme='dark'] .form-wrapper h1 {
+  color: #e2e8f0;
+}
+
+[data-theme='dark'] .footer-tagline,
+[data-theme='dark'] .footer-links a,
+[data-theme='dark'] .footer-contact li,
+[data-theme='dark'] .copyright,
+[data-theme='dark'] .footer-legal a {
+  color: #cbd5e1;
+}

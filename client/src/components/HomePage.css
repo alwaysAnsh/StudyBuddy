@@ -101,6 +101,18 @@
   max-width: 560px;
 }
 
+.desktop-note {
+  margin: -10px 0 0;
+  font-size: 0.92rem;
+  color: #0f766e;
+  background: #ecfeff;
+  border: 1px solid rgba(15, 118, 110, 0.22);
+  padding: 0.55rem 0.75rem;
+  border-radius: 10px;
+  width: fit-content;
+  display: none;
+}
+
 .hero-cta {
   display: flex;
   gap: 16px;
@@ -151,53 +163,175 @@
   justify-content: center;
 }
 
+.hero-visual::before {
+  content: '';
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  border: 1.5px dashed rgba(34, 211, 238, 0.35);
+}
+
 .floating-card {
   position: absolute;
   background: white;
-  padding: 20px 24px;
-  border-radius: 18px;
+  width: 78px;
+  height: 78px;
+  border-radius: 50%;
   box-shadow: 0 18px 38px rgba(15, 23, 42, 0.12);
   display: flex;
   align-items: center;
-  gap: 12px;
-  animation: float 3.4s ease-in-out infinite;
+  justify-content: center;
+  animation: orbit-spin 18s linear infinite;
   border: 1px solid rgba(15, 23, 42, 0.06);
+  left: 50%;
+  top: 50%;
+  transform-origin: center center;
 }
 
 .floating-card.card-1 {
-  top: 16%;
-  left: 6%;
+  --angle: 0deg;
   animation-delay: 0s;
 }
 
 .floating-card.card-2 {
-  top: 48%;
-  right: 4%;
-  animation-delay: 1.2s;
+  --angle: 60deg;
+  animation-delay: -3s;
 }
 
 .floating-card.card-3 {
-  bottom: 14%;
-  left: 20%;
-  animation-delay: 2.1s;
+  --angle: 120deg;
+  animation-delay: -6s;
 }
 
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0);
+.floating-card.card-4 {
+  --angle: 180deg;
+  animation-delay: -9s;
+}
+
+.floating-card.card-5 {
+  --angle: 240deg;
+  animation-delay: -12s;
+}
+
+.floating-card.card-6 {
+  --angle: 300deg;
+  animation-delay: -15s;
+}
+
+.orbit-core {
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.2), rgba(56, 189, 248, 0.25));
+  border: 1px solid rgba(34, 211, 238, 0.35);
+  box-shadow: 0 0 0 42px rgba(34, 211, 238, 0.05), 0 0 0 84px rgba(34, 211, 238, 0.03);
+}
+
+@keyframes orbit-spin {
+  0% {
+    transform: translate(-50%, -50%) rotate(var(--angle)) translateY(-128px) rotate(calc(-1 * var(--angle)));
   }
-  50% {
-    transform: translateY(-18px);
+  100% {
+    transform: translate(-50%, -50%) rotate(calc(var(--angle) + 360deg)) translateY(-128px) rotate(calc(-1 * var(--angle)));
   }
 }
 
 .card-icon {
-  font-size: 24px;
+  font-size: 29px;
+  line-height: 1;
 }
 
 .card-text {
-  font-weight: 600;
-  color: #1f2937;
+  display: none;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Desktop feature marquee */
+.feature-marquee-section {
+  max-width: 1400px;
+  margin: -10px auto 24px;
+  padding: 0 100px;
+  overflow: hidden;
+  position: relative;
+}
+
+.feature-marquee-track {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: max-content;
+  animation: marquee-right-to-left 24s linear infinite;
+}
+
+.feature-marquee-track:hover {
+  animation-play-state: paused;
+}
+
+.feature-pill {
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  color: #0f172a;
+  padding: 0.5rem 0.92rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.feature-pill-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 50%;
+  background: rgba(34, 211, 238, 0.12);
+  font-size: 0.82rem;
+}
+
+.feature-marquee-section::before,
+.feature-marquee-section::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 64px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.feature-marquee-section::before {
+  left: 0;
+  background: linear-gradient(to right, #f7fafc, rgba(247, 250, 252, 0));
+}
+
+.feature-marquee-section::after {
+  right: 0;
+  background: linear-gradient(to left, #f7fafc, rgba(247, 250, 252, 0));
+}
+
+@keyframes marquee-right-to-left {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
 }
 
 /* Section Shared Styles */
@@ -412,10 +546,106 @@
   max-width: 800px;
 }
 
-.business-stats {
+.private-room-points {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.private-room-points div {
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: #f8fafc;
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.xp-section {
+  padding: 90px 100px 30px;
+  max-width: 1300px;
+  margin: 0 auto;
+}
+
+.xp-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 60px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 26px;
+}
+
+.xp-card {
+  background: white;
+  border-radius: 20px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.08);
+  padding: 24px 24px 18px;
+}
+
+.xp-card h3 {
+  margin: 0 0 14px;
+  font-size: 1.05rem;
+  color: var(--ink);
+}
+
+.xp-card ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.xp-card li {
+  padding: 0.55rem 0.65rem;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 10px;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.xp-card li strong {
+  color: var(--ink);
+  float: right;
+}
+
+.level-list li {
+  color: var(--ink);
+}
+
+.faq-section {
+  padding: 70px 100px 40px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.faq-list {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.faq-item {
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 14px;
+  padding: 0.25rem 0.95rem;
+}
+
+.faq-item summary {
+  cursor: pointer;
+  list-style: none;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--ink);
+  padding: 0.85rem 0;
+}
+
+.faq-item p {
+  margin: 0 0 0.9rem;
+  color: var(--muted);
+  line-height: 1.6;
+  font-size: 0.95rem;
 }
 
 .stat-item {
@@ -515,8 +745,17 @@
     justify-content: center;
   }
 
+  .desktop-note {
+    display: block;
+    margin: -4px auto 0;
+  }
+
   .hero-visual {
     height: 420px;
+  }
+
+  .feature-marquee-section {
+    display: none;
   }
 
   .steps-container {
@@ -534,6 +773,18 @@
     gap: 36px;
   }
 
+  .xp-section {
+    padding: 70px 40px 20px;
+  }
+
+  .faq-section {
+    padding: 56px 40px 20px;
+  }
+
+  .xp-grid {
+    grid-template-columns: 1fr;
+  }
+
   .value-section,
   .benefits-section,
   .steps-section,
@@ -546,22 +797,36 @@
 @media (max-width: 640px) {
   .hero-section {
     padding: 56px 24px;
+    min-height: auto;
+    gap: 20px;
+  }
+
+  .hero-visual {
+    display: none;
+    height: 0;
   }
 
   .hero-title {
-    font-size: 34px;
+    font-size: 30px;
+    line-height: 1.14;
   }
 
   .hero-subtitle {
-    font-size: 16px;
+    font-size: 15px;
+    line-height: 1.55;
+  }
+
+  .desktop-note {
+    font-size: 0.8rem;
   }
 
   .section-title {
-    font-size: 30px;
+    font-size: 26px;
+    line-height: 1.2;
   }
 
   .section-subtitle {
-    font-size: 16px;
+    font-size: 14px;
   }
 
   .features-grid,
@@ -578,6 +843,14 @@
     padding: 60px 24px;
   }
 
+  .xp-section {
+    padding: 56px 24px 8px;
+  }
+
+  .faq-section {
+    padding: 48px 24px 10px;
+  }
+
   .benefits-section {
     margin: 0 18px;
   }
@@ -587,16 +860,42 @@
     padding: 54px 28px;
   }
 
+  .business-title {
+    font-size: clamp(2rem, 9vw, 2.5rem);
+    line-height: 1.08;
+  }
+
+  .business-description {
+    font-size: 1rem;
+    line-height: 1.45;
+    margin-bottom: 1.6rem;
+  }
+
+  .private-room-points div {
+    font-size: 0.85rem;
+    padding: 0.5rem 0.7rem;
+  }
+
   .cta-title {
-    font-size: 30px;
+    font-size: clamp(2rem, 8vw, 2.4rem);
+    line-height: 1.08;
   }
 
   .cta-subtitle {
-    font-size: 16px;
+    font-size: 1rem;
+    line-height: 1.4;
+  }
+
+  .xp-card h3 {
+    font-size: 0.95rem;
+  }
+
+  .xp-card li {
+    font-size: 0.83rem;
   }
 
   .floating-card {
-    padding: 16px 20px;
+    display: none;
   }
 
   .card-text {

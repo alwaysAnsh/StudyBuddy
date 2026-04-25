@@ -119,6 +119,7 @@ const StudyRoomDetail = () => {
   const { detail, isLoading } = useSelector((s) => s.studyRooms);
   const buddies = useSelector((s) => s.buddies.buddies);
   const [tab, setTab] = useState('overview');
+  const [invitingBuddyIds, setInvitingBuddyIds] = useState([]);
   const { confirm } = useConfirm();
 
   const group = detail.group;
@@ -155,12 +156,17 @@ const StudyRoomDetail = () => {
     (task.progress || []).find((p) => uidStr(p.user) === uidStr(user));
 
   const handleInvite = async (buddyId) => {
+    const uid = String(buddyId);
+    if (invitingBuddyIds.includes(uid)) return;
+    setInvitingBuddyIds((prev) => [...prev, uid]);
     try {
       await dispatch(inviteBuddyToRoom({ groupId, buddyUserId: buddyId })).unwrap();
       await dispatch(loadStudyRoom(groupId)).unwrap();
       notify({ type: 'success', message: 'Invitation sent.' });
     } catch (e) {
       notify({ type: 'error', message: e || 'Invite failed' });
+    } finally {
+      setInvitingBuddyIds((prev) => prev.filter((id) => id !== uid));
     }
   };
 
@@ -308,6 +314,7 @@ const StudyRoomDetail = () => {
           isCreator={isCreator}
           inviteCandidates={inviteCandidates}
           onInvite={handleInvite}
+          invitingBuddyIds={invitingBuddyIds}
           dispatch={dispatch}
         />
       )}
@@ -365,7 +372,7 @@ const StudyRoomDetail = () => {
   );
 };
 
-function OverviewPanel({ group, groupId, isCreator, inviteCandidates, onInvite, dispatch }) {
+function OverviewPanel({ group, groupId, isCreator, inviteCandidates, onInvite, invitingBuddyIds, dispatch }) {
   const pendingInviteeIds = useMemo(
     () => new Set((group.outgoingPendingInvites || []).map((inv) => uidStr(inv.invitee))),
     [group.outgoingPendingInvites]
@@ -506,11 +513,14 @@ function OverviewPanel({ group, groupId, isCreator, inviteCandidates, onInvite, 
         <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
           {inviteCandidates.map((b) => {
             const sent = pendingInviteeIds.has(uidStr(b._id));
+            const sending = invitingBuddyIds.includes(uidStr(b._id));
             return (
               <li key={b._id} style={{ marginBottom: '0.35rem' }}>
                 {b.name} (@{b.username}){' '}
-                {sent ? (
-                  <span className="srd-invite-sent">Invitation sent</span>
+                {sent || sending ? (
+                  <button type="button" className="srd-btn" disabled>
+                    {sending ? 'Sending...' : 'Pending'}
+                  </button>
                 ) : (
                   <button type="button" className="srd-btn primary" onClick={() => onInvite(b._id)}>
                     Invite

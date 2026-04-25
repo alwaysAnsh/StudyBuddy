@@ -1134,7 +1134,13 @@ useEffect(() => {
         <div className="signup-form-section">
           <div className="form-wrapper">
             <h1>Welcome to GeekBuddy</h1>
-            <p className="subtitle">Join thousands of learners worldwide</p>
+            <p className="subtitle">Create your account to start collaborating with buddies</p>
+            <div className="signup-recovery-alert" role="note" aria-live="polite">
+              <strong>Important:</strong> Password recovery works only through your selected
+              security question and answer. If you forget both, you will need to create a new
+              account and lose access to the previous one. You can change your password anytime
+              after logging in from Settings.
+            </div>
 
             {error && <div className="error-message">{error}</div>}
 

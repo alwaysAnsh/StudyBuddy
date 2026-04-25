@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { useTheme } from '../context/ThemeContext';
 import './Layout.css';
 
 const Layout = ({ children }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { isAuthenticated } = useSelector((state) => state.auth);
+  const { theme, toggleTheme } = useTheme();
 
   const toggleMenu = () => {
     setIsMenuOpen((open) => !open);
@@ -14,7 +16,6 @@ const Layout = ({ children }) => {
   const publicNavItems = [
     { name: 'Home', path: '/', icon: '🏠' },
     { name: 'About', path: '/about', icon: 'ℹ️' },
-    { name: 'Contact', path: '/contact', icon: '📧' },
   ];
 
   const authenticatedNavItems = [
@@ -61,6 +62,17 @@ const Layout = ({ children }) => {
                 <span className="nav-label">{item.name}</span>
               </NavLink>
             ))}
+            <button
+              type="button"
+              className="nav-item nav-theme-toggle"
+              onClick={toggleTheme}
+              aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
+            >
+              <span className="nav-icon" aria-hidden>
+                {theme === 'dark' ? '☀️' : '🌙'}
+              </span>
+              <span className="nav-label">{theme === 'dark' ? 'Light' : 'Dark'}</span>
+            </button>
           </nav>
         </div>
       </header>
@@ -85,26 +97,23 @@ const Layout = ({ children }) => {
             <ul className="footer-links">
               <li><a href="/">Home</a></li>
               <li><a href="/about">About</a></li>
-              <li><a href="/contact">Contact</a></li>
               {isAuthenticated && <li><a href="/dashboard">Dashboard</a></li>}
             </ul>
           </div>
 
           <div className="footer-section">
-            <h4 className="footer-heading">Contact</h4>
+            <h4 className="footer-heading">Creator</h4>
             <ul className="footer-contact">
-              <li>📧 hello@learningapp.com</li>
-              <li>📱 +1 (555) 123-4567</li>
-              <li>📍 San Francisco, CA</li>
+              <li>👤 Ansh</li>
+              <li>📍 Pune, Maharashtra</li>
             </ul>
           </div>
 
           <div className="footer-section">
             <h4 className="footer-heading">Connect</h4>
             <div className="social-links">
-              <a href="#" className="social-link">Twitter</a>
-              <a href="#" className="social-link">LinkedIn</a>
-              <a href="#" className="social-link">GitHub</a>
+              <a href="https://www.linkedin.com/in/ansh-jainy/" target="_blank" rel="noreferrer" className="social-link">LinkedIn</a>
+              <a href="https://github.com/alwaysAnsh" target="_blank" rel="noreferrer" className="social-link">GitHub</a>
             </div>
           </div>
         </div>
@@ -114,8 +123,8 @@ const Layout = ({ children }) => {
             © {new Date().getFullYear()} GeekBuddy. All rights reserved.
           </p>
           <div className="footer-legal">
-            <a href="#">Privacy Policy</a>
-            <a href="#">Terms of Service</a>
+            <Link to="/license-policy">License Policy</Link>
+            <Link to="/terms-of-service">Terms of Service</Link>
           </div>
         </div>
       </footer>

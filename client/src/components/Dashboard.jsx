@@ -13,6 +13,23 @@ import UserSearch from './UserSearch';
 import './Dashboard.css';
 import ProfileSettings from './ProfileSettings';
 import { resolveUserAvatarUrl, uiAvatarsFallback } from '../utils/avatarUrl';
+import { useTheme } from '../context/ThemeContext';
+import { APP_TOUR_EVENT } from './AppTour';
+
+const DASHBOARD_TAB_KEY = 'karya_dashboard_active_tab_v1';
+
+const LEVEL_TITLES = {
+  1: 'Initiate',
+  2: 'Adept',
+  3: 'Scholar',
+  4: 'Rune Bearer',
+  5: 'Arcane Coder',
+  6: 'Shadow Architect',
+  7: 'Chrono Sage',
+  8: 'Mythic Engineer',
+  9: 'Ethereal Overlord',
+  10: 'Celestial Ascendant',
+};
 
 const Dashboard = () => {
   const dispatch = useDispatch();
@@ -24,13 +41,19 @@ const Dashboard = () => {
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [activeTab, setActiveTab] = useState('my-tasks');
+  const [activeTab, setActiveTab] = useState(() => {
+    const validTabs = new Set(['my-tasks', 'assigned-by-me', 'notes', 'activity']);
+    const saved = localStorage.getItem(DASHBOARD_TAB_KEY);
+    return validTabs.has(saved) ? saved : 'my-tasks';
+  });
   const [filterCategory, setFilterCategory] = useState('all');
   const [showAllCategories, setShowAllCategories] = useState(false);
+  const [showLevelsModal, setShowLevelsModal] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showXPNotification, setShowXPNotification] = useState(false);
   const [xpGained, setXpGained] = useState(0);
   const userMenuRef = useRef(null);
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     dispatch(getMyTasks());
@@ -42,8 +65,9 @@ const Dashboard = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    dispatch(markScopeRead('my_tasks'));
-  }, [dispatch]);
+    const scope = TAB_SCOPE[activeTab];
+    if (scope) dispatch(markScopeRead(scope));
+  }, [dispatch, activeTab]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -110,6 +134,10 @@ const Dashboard = () => {
     setActiveTab(tab);
   };
 
+  useEffect(() => {
+    localStorage.setItem(DASHBOARD_TAB_KEY, activeTab);
+  }, [activeTab]);
+
   const handleProfileClick = () => {
     setShowUserMenu(false);
     navigate(`/profile/${user?.username}`);
@@ -172,6 +200,17 @@ const Dashboard = () => {
   const xpInCurrentLevel = (user?.xp || 0) - currentLevelXP;
   const xpPercentage = (xpInCurrentLevel / 100) * 100;
   const xpNeededForNextLevel = nextLevelXP - (user?.xp || 0);
+  const allLevels = useMemo(() => {
+    const maxLevelToShow = 20;
+    return Array.from({ length: maxLevelToShow }, (_, idx) => {
+      const level = idx + 1;
+      return {
+        level,
+        title: level >= 10 ? LEVEL_TITLES[10] : LEVEL_TITLES[level],
+        minXp: (level - 1) * 100,
+      };
+    });
+  }, []);
 
   return (
     <div className="professional-dashboard">
@@ -238,6 +277,15 @@ const Dashboard = () => {
               <div className="user-dropdown-pro">
                 <div className="dropdown-item-pro" onClick={handleProfileClick}>
                   My Profile
+                </div>
+                <div
+                  className="dropdown-item-pro"
+                  onClick={() => window.dispatchEvent(new Event(APP_TOUR_EVENT))}
+                >
+                  Take tour
+                </div>
+                <div className="dropdown-item-pro" onClick={toggleTheme}>
+                  Theme: {theme === 'dark' ? 'Dark' : 'Light'}
                 </div>
                 <div className="dropdown-item-pro logout" onClick={handleLogout}>
                   Logout
@@ -328,6 +376,13 @@ const Dashboard = () => {
                   {xpInCurrentLevel} / 100 XP
                 </div>
               </div>
+              <button
+                type="button"
+                className="view-levels-btn-pro"
+                onClick={() => setShowLevelsModal(true)}
+              >
+                View all levels
+              </button>
             </div>
 
             <div className="stats-grid-pro">
@@ -509,6 +564,38 @@ const Dashboard = () => {
       )}
 
       {showSettings && <ProfileSettings onClose={() => setShowSettings(false)} />}
+
+      {showLevelsModal && (
+        <div className="levels-modal-overlay-pro" onClick={() => setShowLevelsModal(false)}>
+          <div className="levels-modal-pro" onClick={(e) => e.stopPropagation()}>
+            <div className="levels-modal-header-pro">
+              <h3>All levels (read-only)</h3>
+              <button type="button" onClick={() => setShowLevelsModal(false)}>
+                ×
+              </button>
+            </div>
+            <p className="levels-help-pro">
+              Levels unlock automatically from XP. You cannot select them manually.
+            </p>
+            <div className="levels-list-pro">
+              {allLevels.map((entry) => {
+                const unlocked = (user?.level || 1) >= entry.level;
+                return (
+                  <div
+                    key={entry.level}
+                    className={`level-row-pro ${unlocked ? 'unlocked' : 'locked'}`}
+                  >
+                    <div>
+                      <strong>Level {entry.level}</strong> · {entry.title}
+                    </div>
+                    <span>{entry.minXp} XP</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

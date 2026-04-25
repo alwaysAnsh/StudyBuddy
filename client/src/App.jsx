@@ -4,7 +4,6 @@ import { useSelector } from 'react-redux';
 import Layout from './components/Layout';
 import HomePage from './components/HomePage';
 import AboutPage from './components/AboutPage';
-import ContactPage from './components/ContactPage';
 import Login from './components/Login';
 
 import Dashboard from './components/Dashboard';
@@ -21,6 +20,10 @@ import Notifications from './components/Notifications';
 import NotificationPoller from './components/NotificationPoller';
 import PublicActivity from './components/PublicActivity';
 import { ConfirmProvider } from './context/ConfirmContext';
+import { ThemeProvider } from './context/ThemeContext';
+import AppTour from './components/AppTour';
+import TermsOfService from './components/TermsOfService';
+import LicensePolicy from './components/LicensePolicy';
 
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated } = useSelector((state) => state.auth);
@@ -30,14 +33,17 @@ const PrivateRoute = ({ children }) => {
 function App() {
   return (
     <Router>
-      <ConfirmProvider>
-        <NotificationPoller />
-        <ToastHost />
-        <Routes>
+      <ThemeProvider>
+        <ConfirmProvider>
+          <NotificationPoller />
+          <ToastHost />
+          <AppTour />
+          <Routes>
         {/* Public routes with Layout */}
         <Route path="/" element={<Layout><HomePage /></Layout>} />
         <Route path="/about" element={<Layout><AboutPage /></Layout>} />
-        <Route path="/contact" element={<Layout><ContactPage /></Layout>} />
+        <Route path="/terms-of-service" element={<Layout><TermsOfService /></Layout>} />
+        <Route path="/license-policy" element={<Layout><LicensePolicy /></Layout>} />
         
         {/* Auth routes without Layout (full screen) */}
         <Route path="/login" element={<Login />} />
@@ -99,8 +105,9 @@ function App() {
         
         {/* Catch all */}
         <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-      </ConfirmProvider>
+          </Routes>
+        </ConfirmProvider>
+      </ThemeProvider>
     </Router>
   );
 }

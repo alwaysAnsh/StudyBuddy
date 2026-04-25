@@ -7,11 +7,6 @@ import { notify } from '../utils/notify';
 import axiosInstance from '../config/axios';
 import { collectHashtags } from '../utils/activityHashtags';
 
-const uploadsOrigin = () => {
-  const base = axiosInstance.defaults.baseURL || '';
-  return base.replace(/\/api\/?$/i, '') || '';
-};
-
 const XP_ACTIVITY_POST = 7;
 
 const PostActivity = ({ onClose, onXPGained }) => {
@@ -24,6 +19,7 @@ const PostActivity = ({ onClose, onXPGained }) => {
   });
   const [imageUrl, setImageUrl] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e) => {
@@ -36,23 +32,29 @@ const PostActivity = ({ onClose, onXPGained }) => {
     e.target.value = '';
     if (!file) return;
     setUploading(true);
+    setUploadProgress(0);
     try {
       const fd = new FormData();
       fd.append('file', file);
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${uploadsOrigin()}/api/uploads`, {
-        method: 'POST',
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-        body: fd,
+      const res = await axiosInstance.post('/uploads', fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress: (evt) => {
+          if (!evt.total) {
+            setUploadProgress((prev) => (prev < 90 ? prev + 5 : prev));
+            return;
+          }
+          const pct = Math.max(0, Math.min(100, Math.round((evt.loaded * 100) / evt.total)));
+          setUploadProgress(pct);
+        },
       });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.message || 'Upload failed');
-      setImageUrl(data.url);
+      setUploadProgress(100);
+      setImageUrl(res.data?.url || '');
       notify({ type: 'success', message: 'Image attached.' });
     } catch (err) {
-      notify({ type: 'error', message: err?.message || 'Upload failed' });
+      notify({ type: 'error', message: err?.response?.data?.message || err?.message || 'Upload failed' });
     } finally {
       setUploading(false);
+      setTimeout(() => setUploadProgress(0), 400);
     }
   };
 
@@ -153,8 +155,19 @@ const PostActivity = ({ onClose, onXPGained }) => {
                 disabled={uploading}
                 onChange={handleImage}
               />
-              <span>{uploading ? 'Uploading…' : imageUrl ? 'Replace image' : 'Choose image'}</span>
+              <span>
+                {uploading
+                  ? `Uploading ${uploadProgress}%`
+                  : imageUrl
+                    ? 'Replace image'
+                    : 'Choose image'}
+              </span>
             </label>
+            {uploading ? (
+              <div className="pa-upload-progress" aria-live="polite">
+                <div className="pa-upload-progress-bar" style={{ width: `${uploadProgress}%` }} />
+              </div>
+            ) : null}
             {imageUrl && (
               <button type="button" className="pa-remove-img" onClick={() => setImageUrl('')}>
                 Remove image

@@ -76,6 +76,12 @@
   font-size: 14px;
 }
 
+.nav-theme-toggle {
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: #fff;
+  cursor: pointer;
+}
+
 .nav-item:hover {
   background: rgba(15, 23, 42, 0.06);
 }

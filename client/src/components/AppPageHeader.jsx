@@ -2,12 +2,15 @@ import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { fetchNotificationCounts } from '../redux/slices/notificationSlice';
+import { useTheme } from '../context/ThemeContext';
+import { APP_TOUR_EVENT } from './AppTour';
 import './AppPageHeader.css';
 
 const AppPageHeader = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const total = useSelector((s) => s.notifications?.counts?.total ?? 0);
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     dispatch(fetchNotificationCounts());
@@ -31,6 +34,16 @@ const AppPageHeader = () => {
         <Link to="/dashboard" className="app-page-header-dash">
           Dashboard
         </Link>
+        <button
+          type="button"
+          className="app-page-header-dash"
+          onClick={() => window.dispatchEvent(new Event(APP_TOUR_EVENT))}
+        >
+          Take Tour
+        </button>
+        <button type="button" className="app-page-header-dash" onClick={toggleTheme}>
+          {theme === 'dark' ? 'Light' : 'Dark'} Theme
+        </button>
       </div>
     </div>
   );

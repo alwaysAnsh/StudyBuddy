@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   getBuddies,
@@ -35,6 +35,18 @@ const Buddies = () => {
 
   const [activeTab, setActiveTab] = useState('buddies');
   const [searchQuery, setSearchQuery] = useState('');
+  const [sendingUserIds, setSendingUserIds] = useState([]);
+
+  const sentRequestUserIds = useMemo(
+    () =>
+      new Set(
+        (sentRequests || [])
+          .map((req) => req?.receiver?._id || req?.receiver)
+          .filter(Boolean)
+          .map((id) => String(id))
+      ),
+    [sentRequests]
+  );
 
   useEffect(() => {
     dispatch(getBuddies());
@@ -60,6 +72,9 @@ const Buddies = () => {
   }, [searchQuery, activeTab, dispatch]);
 
   const handleSendRequest = async (userId) => {
+    const uid = String(userId);
+    if (sentRequestUserIds.has(uid) || sendingUserIds.includes(uid)) return;
+    setSendingUserIds((prev) => [...prev, uid]);
     try {
       await dispatch(sendBuddyRequest(userId)).unwrap();
       notify({ type: 'success', message: 'Buddy request sent.' });
@@ -70,6 +85,8 @@ const Buddies = () => {
       dispatch(getSentRequests());
     } catch (error) {
       notify({ type: 'error', message: error || 'Failed to send request' });
+    } finally {
+      setSendingUserIds((prev) => prev.filter((id) => id !== uid));
     }
   };
 
@@ -325,7 +342,11 @@ const Buddies = () => {
                     </div>
                     {user.isBuddy ? (
                       <span className="already-buddy-badge">✓ Buddy</span>
-                    ) :  (
+                    ) : sentRequestUserIds.has(String(user._id)) || sendingUserIds.includes(String(user._id)) ? (
+                      <button className="add-buddy-btn" disabled>
+                        {sendingUserIds.includes(String(user._id)) ? 'Sending...' : 'Pending'}
+                      </button>
+                    ) : (
                       <button
                         className="add-buddy-btn"
                         onClick={() => handleSendRequest(user._id)}

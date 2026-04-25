@@ -1,0 +1,72 @@
+.tour-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1300;
+  background: rgba(2, 6, 23, 0.45);
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.tour-card {
+  width: min(460px, 100%);
+  background: var(--surface-bg);
+  color: var(--text-primary);
+  border-radius: 14px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.32);
+  padding: 1rem 1rem 0.9rem;
+}
+
+.tour-progress {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-bottom: 0.35rem;
+}
+
+.tour-card h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.tour-card p {
+  margin: 0.65rem 0 0;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.tour-tip {
+  margin-top: 0.55rem !important;
+  font-size: 0.82rem;
+  color: var(--text-muted) !important;
+}
+
+.tour-actions {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.tour-btn {
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  padding: 0.45rem 0.7rem;
+  background: var(--card-bg);
+  color: var(--text-primary);
+}
+
+.tour-btn.primary {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+
+.tour-btn.danger {
+  color: #dc2626;
+}
+
+.tour-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
